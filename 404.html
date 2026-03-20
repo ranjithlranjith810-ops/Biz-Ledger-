@@ -1,0 +1,28 @@
+<!DOCTYPE html>
+<html>
+<head>
+<meta charset="UTF-8">
+<title>BizLedger Pro</title>
+<script>
+// GitHub Pages SPA redirect trick
+// Saves the path and redirects to index.html which then restores it
+var path = window.location.pathname;
+var search = window.location.search;
+var hash = window.location.hash;
+var redirect = encodeURIComponent(path + search + hash);
+window.location.replace('/?p=' + redirect);
+</script>
+</head>
+<body>
+<style>
+body{background:#000F08;display:flex;align-items:center;justify-content:center;min-height:100vh;margin:0;font-family:system-ui;color:#fff;}
+.box{text-align:center;}
+.box h2{font-size:20px;margin-bottom:8px;color:#FB3640;}
+.box p{font-size:13px;color:rgba(255,255,255,.6);}
+</style>
+<div class="box">
+  <h2>Loading BizLedger…</h2>
+  <p>Redirecting you back to the app</p>
+</div>
+</body>
+</html>
