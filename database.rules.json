@@ -1,0 +1,54 @@
+{
+  "rules": {
+    "users": {
+      "$uid": {
+        ".read": "auth != null && auth.uid === $uid",
+        ".write": "auth != null && auth.uid === $uid"
+      }
+    },
+    "companies": {
+      "$ownerUid": {
+        ".read": "auth != null && auth.uid === $ownerUid",
+        ".write": "auth != null && auth.uid === $ownerUid"
+      }
+    },
+    "erp": {
+      "$ownerUid": {
+        ".read": "auth != null && (auth.uid === $ownerUid || root.child('teamInvites').child(auth.uid + '_' + $ownerUid).exists())",
+        ".write": "auth != null && (auth.uid === $ownerUid || root.child('teamInvites').child(auth.uid + '_' + $ownerUid).child('role').val() === 'editor')",
+        "invoices": {
+          ".indexOn": ["_ts", "type", "status", "fy", "partyName"]
+        },
+        "parties": {
+          ".indexOn": ["_ts", "type", "name"]
+        },
+        "products": {
+          ".indexOn": ["_ts", "name", "hsnCode"]
+        },
+        "vehicles": {
+          ".indexOn": ["_ts", "number", "status"]
+        },
+        "payments": {
+          ".indexOn": ["_ts", "direction", "partyName"]
+        },
+        "employees": {
+          ".indexOn": ["_ts", "name"]
+        },
+        "expenses": {
+          ".indexOn": ["_ts", "category"]
+        }
+      }
+    },
+    "teamInvites": {
+      ".indexOn": ["email", "companyId"],
+      "$inviteId": {
+        ".read": "auth != null",
+        ".write": "auth != null && (data.child('companyId').val() === auth.uid || !data.exists())"
+      }
+    },
+    "$other": {
+      ".read": false,
+      ".write": false
+    }
+  }
+}
