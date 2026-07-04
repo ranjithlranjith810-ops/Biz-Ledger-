@@ -990,8 +990,26 @@ select option{background:#0d180d;color:var(--t1);}
       <div class="fg"><label>Date *</label><input id="qidt" type="date"/></div>
     </div>
     <div class="fg"><label>Receiver Name *</label><input id="qirecv" placeholder="Receiver name" autocomplete="off"/></div>
-    <div class="fg"><label>Vehicle Number</label><input id="qiveh" placeholder="Select vehicle or type" autocomplete="off"/></div>
+    <div id="qparty-sugg" style="display:none;background:var(--card);border:1px solid var(--bdr);border-radius:8px;margin-top:-8px;margin-bottom:10px;max-height:120px;overflow-y:auto;"></div>
+
+    <div class="fr">
+      <div class="fg"><label>State</label><input id="qi-state" placeholder="State"/></div>
+      <div class="fg"><label>District</label><input id="qi-district" placeholder="District"/></div>
+    </div>
+    <div class="fr">
+      <div class="fg"><label>State Code</label><input id="qi-statecode" placeholder="e.g. 33"/></div>
+      <div class="fg"><label>Vehicle Number</label><input id="qiveh" placeholder="Select vehicle or type" autocomplete="off"/></div>
+    </div>
     <div id="qveh-sugg" style="display:none;background:var(--card);border:1px solid var(--bdr);border-radius:8px;margin-top:-8px;margin-bottom:10px;max-height:110px;overflow-y:auto;box-shadow:var(--sh);"></div>
+    <div class="fg"><label>Payment Terms</label>
+      <select id="qipt">
+        <option value="Immediate">Immediate (NEFT/RTGS/CHEQUE)</option>
+        <option value="Net 15">Net 15 Days</option>
+        <option value="Net 30">Net 30 Days</option>
+        <option value="Net 45">Net 45 Days</option>
+        <option value="Net 60">Net 60 Days</option>
+      </select>
+    </div>
 
     <div class="sech" style="margin:4px 0"><span class="mi material-icons-round">list</span>Product Details</div>
     <div class="info-tip">💡 Enter the exact amount for each product — no GST is added or calculated.</div>
@@ -4521,11 +4539,42 @@ function openQInvF(inv){
   g('qino').value = inv ? inv.invoiceNumber : qNextNo();
   g('qidt').value = (inv && inv.invoiceDate) ? inv.invoiceDate : td();
   g('qirecv').value = inv ? (inv.receiverName||'') : '';
+  g('qi-state').value = inv ? (inv.state||'') : '';
+  g('qi-district').value = inv ? (inv.district||'') : '';
+  g('qi-statecode').value = inv ? (inv.stateCode||'') : '';
   g('qiveh').value = inv ? (inv.vehicleNo||'') : '';
+  g('qipt').value = inv ? (inv.paymentTerms||'Immediate') : 'Immediate';
   g('qi-notes').value = inv ? (inv.notes||'') : '';
   buildQItemRows();
   opn('ovqinv');
   setupQVehAC();
+  setupQPartyAC();
+}
+
+// Receiver-name autocomplete — pulls from existing Parties (customers), like the main invoice form
+function setupQPartyAC(){
+  var inp = g('qirecv'), sugg = g('qparty-sugg');
+  if(!inp || !sugg) return;
+  inp.oninput = function(){
+    var q = inp.value.toLowerCase();
+    var src = (_par||[]).filter(function(p){ return p.type==='customer'||p.type==='both'||!p.type; });
+    var matches = q ? src.filter(function(p){ return (p.name||'').toLowerCase().includes(q); }).slice(0,8) : src.slice(0,8);
+    if(!matches.length){ sugg.style.display='none'; return; }
+    sugg.style.display='block';
+    sugg.innerHTML = matches.map(function(p){
+      return '<div class="sugg-item" onmousedown="fillQParty(\''+p.id+'\')">'
+        +'<strong>'+p.name+'</strong>'+(p.city?' <span style="color:var(--t2);font-size:11px">'+p.city+'</span>':'')+'</div>';
+    }).join('');
+  };
+  inp.onfocus = function(){ inp.oninput(); };
+  inp.onblur = function(){ setTimeout(function(){ sugg.style.display='none'; }, 250); };
+}
+function fillQParty(pid){
+  var p = (_par||[]).find(function(x){ return x.id===pid; });
+  if(!p) return;
+  if(g('qirecv')) g('qirecv').value = p.name;
+  if(g('qi-state') && p.state) g('qi-state').value = p.state;
+  if(g('qparty-sugg')) g('qparty-sugg').style.display='none';
 }
 
 function buildQItemRows(){
@@ -4535,7 +4584,10 @@ function buildQItemRows(){
   _qitems.forEach(function(it, i){
     html += '<div class="item-card" id="qirow-'+i+'">'
       +'<button class="rm-btn" onclick="removeQItem('+i+')" type="button"><span class="mi material-icons-round">close</span></button>'
-      +'<div class="fg"><label>Product Name *</label><input id="qiname-'+i+'" value="" placeholder="Product / material name" autocomplete="off"/></div>'
+      +'<div class="fg"><label>Product Name *</label>'
+      +'<input id="qiname-'+i+'" value="" placeholder="Product / material name" autocomplete="off"/>'
+      +'<div id="qprod-sugg-'+i+'" style="display:none;background:var(--card);border:1px solid var(--bdr);border-radius:8px;margin-top:2px;max-height:160px;overflow-y:auto;box-shadow:var(--sh);position:relative;z-index:99;"></div>'
+      +'</div>'
       +'<div class="fg"><label>Exact Amount ₹ *</label><input type="number" id="qiamt-'+i+'" value="" placeholder="0.00" min="0"/></div>'
       +'</div>';
   });
@@ -4547,8 +4599,31 @@ function buildQItemRows(){
     [nm, amt].forEach(function(el){
       if(el) el.addEventListener('input', function(){ syncQItems(); recalcQTotals(); });
     });
+    // Product-name autocomplete — pulls from existing Inventory products (name only, no price/HSN copied)
+    if(nm){
+      var sugg = g('qprod-sugg-'+i);
+      function showQProd(q){
+        if(!sugg) return;
+        var matches = q ? (_pro||[]).filter(function(p){ return (p.name||'').toLowerCase().includes(q); }).slice(0,7) : (_pro||[]).slice(0,7);
+        if(!matches.length){ sugg.style.display='none'; return; }
+        sugg.style.display='block';
+        sugg.innerHTML = matches.map(function(p){
+          return '<div class="sugg-item" onmousedown="fillQProdItem('+i+',\''+p.id+'\')"><strong>'+(p.name||'')+'</strong></div>';
+        }).join('');
+      }
+      nm.addEventListener('focus', function(){ showQProd(nm.value.toLowerCase()); });
+      nm.addEventListener('input', function(){ showQProd(nm.value.toLowerCase()); });
+      nm.addEventListener('blur', function(){ setTimeout(function(){ if(sugg) sugg.style.display='none'; }, 250); });
+    }
   });
   recalcQTotals();
+}
+function fillQProdItem(idx, pid){
+  var p = (_pro||[]).find(function(x){ return x.id===pid; });
+  if(!p) return;
+  if(g('qiname-'+idx)) g('qiname-'+idx).value = p.name || '';
+  var ps = g('qprod-sugg-'+idx); if(ps) ps.style.display='none';
+  syncQItems(); recalcQTotals();
 }
 
 function addQItem(){
@@ -4618,7 +4693,11 @@ function saveQInv(){
     invoiceNumber: no,
     invoiceDate: gv('qidt'),
     receiverName: recv,
+    state: gv('qi-state'),
+    district: gv('qi-district'),
+    stateCode: gv('qi-statecode'),
     vehicleNo: gv('qiveh'),
+    paymentTerms: gv('qipt') || 'Immediate',
     items: JSON.parse(JSON.stringify(filled)),
     totalAmount: parseFloat(total.toFixed(2)),
     productCount: filled.length,
@@ -4681,6 +4760,10 @@ function openQDetail(inv){
   var html = '<div class="dcard"><h4>'+inv.invoiceNumber+'</h4>'
     +'<div class="drow"><span>Date</span><span>'+fd(inv.invoiceDate)+'</span></div>'
     +'<div class="drow"><span>Receiver</span><span style="font-weight:600;max-width:60%;text-align:right">'+(inv.receiverName||'')+'</span></div>'
+    +(inv.state?'<div class="drow"><span>State</span><span>'+inv.state+'</span></div>':'')
+    +(inv.district?'<div class="drow"><span>District</span><span>'+inv.district+'</span></div>':'')
+    +(inv.stateCode?'<div class="drow"><span>State Code</span><span>'+inv.stateCode+'</span></div>':'')
+    +(inv.paymentTerms?'<div class="drow"><span>Payment Terms</span><span>'+inv.paymentTerms+'</span></div>':'')
     +(inv.vehicleNo?'<div class="drow"><span>Vehicle No</span><span>'+inv.vehicleNo+'</span></div>':'')
     +'<div class="drow"><span>No. of Products</span><span>'+(inv.productCount||items.length)+'</span></div>'
     +'</div>'
@@ -4709,55 +4792,55 @@ function doDelQInv(){
   }).catch(function(e){ toast(e.message,'r'); });
 }
 
-// ── Quick Invoice PDF (simple layout — no GST/tax rows) ──
+// ── Quick Invoice PDF — minimal layout, no company header, no signature ──
 function buildQPDF(inv){
   var {jsPDF} = window.jspdf;
   var doc = new jsPDF({unit:'mm', format:'a4'});
-  var W = 210, M = 10;
-  var c = _co || {};
+  var W = 210, M = 12;
 
-  doc.setFillColor(0,131,143);
-  doc.rect(0,0,W,40,'F');
-  doc.setTextColor(255,255,255);
-  var logoX = M;
-  if(_logoB64){
-    try{ doc.addImage(_logoB64,'PNG',M,4,28,14); logoX = M+32; }catch(e){ logoX = M; }
-  }
-  doc.setFontSize(15); doc.setFont('helvetica','bold');
-  doc.text(c.name||'Company', logoX, 10);
-  doc.setFontSize(7.5); doc.setFont('helvetica','normal');
-  var addrFull = (c.address?c.address:'') + (c.city?', '+c.city:'') + (c.pincode?' - '+c.pincode:'');
-  var addrLines = doc.splitTextToSize(addrFull, W-logoX-50);
-  addrLines.slice(0,2).forEach(function(l,i){ doc.text(l, logoX, 17+i*4.5); });
-  var phY = 17 + Math.min(addrLines.length,2)*4.5;
-  doc.text('Contact No: '+(c.phone||'')+(c.phone2?', '+c.phone2:''), logoX, phY);
-  doc.setFontSize(17);
-  doc.text('QUICK INVOICE', W-M, 16, {align:'right'});
+  // Plain title — no company name/logo/address/GST anywhere on this PDF
+  doc.setTextColor(0,131,143);
+  doc.setFontSize(18); doc.setFont('helvetica','bold');
+  doc.text('QUICK INVOICE', W/2, 16, {align:'center'});
+  doc.setDrawColor(0,131,143); doc.setLineWidth(0.6);
+  doc.line(M, 21, W-M, 21);
 
+  // Info box — only the requested fields
   doc.setTextColor(30,30,30);
-  doc.setDrawColor(0,131,143); doc.setLineWidth(0.3);
-  doc.rect(M,42,90,26);
-  doc.rect(110,42,W-110-M,26);
-  doc.setFontSize(8); doc.setFont('helvetica','bold');
-  doc.text('Invoice No :', M+2, 49); doc.setFont('helvetica','normal'); doc.text(inv.invoiceNumber||'', M+32, 49);
-  doc.setFont('helvetica','bold'); doc.text('Date :', M+2, 54); doc.setFont('helvetica','normal'); doc.text(fd(inv.invoiceDate)||'', M+32, 54);
-  if(inv.vehicleNo){ doc.setFont('helvetica','bold'); doc.text('Vehicle No :', M+2, 59); doc.setFont('helvetica','normal'); doc.text(inv.vehicleNo, M+32, 59); }
+  doc.setDrawColor(200,200,200); doc.setLineWidth(0.2);
+  doc.rect(M, 28, W-M*2, 46);
 
-  doc.setFontSize(8); doc.setFont('helvetica','bold');
-  doc.text('Receiver:', 112, 49);
-  doc.setFontSize(10); doc.setFont('helvetica','bold');
-  doc.text(inv.receiverName||'', 112, 55);
-  doc.setFontSize(8); doc.setFont('helvetica','normal');
-  doc.text('No. of Products: '+(inv.productCount||(inv.items||[]).length), 112, 62);
+  var lx = M+4, lv = M+42, rx = W/2+6, rv = W/2+38;
+  var ly = 35;
+  doc.setFontSize(9);
 
+  function row(labelX, valueX, y, label, value){
+    doc.setFont('helvetica','bold'); doc.text(label, labelX, y);
+    doc.setFont('helvetica','normal'); doc.text(value||'—', valueX, y);
+  }
+
+  row(lx, lv, ly, 'Invoice No :', inv.invoiceNumber);
+  row(rx, rv, ly, 'Date :', fd(inv.invoiceDate));
+  ly += 8;
+  row(lx, lv, ly, 'Receiver Name :', inv.receiverName);
+  row(rx, rv, ly, 'Vehicle No :', inv.vehicleNo);
+  ly += 8;
+  row(lx, lv, ly, 'State :', inv.state);
+  row(rx, rv, ly, 'District :', inv.district);
+  ly += 8;
+  row(lx, lv, ly, 'State Code :', inv.stateCode);
+  row(rx, rv, ly, 'Payment Terms :', inv.paymentTerms);
+
+  // Products table
   var items = inv.items || [];
   var tdata = items.map(function(it, i){ return [(i+1).toString(), it.name||'', fmtN(it.amount||0)]; });
 
   doc.autoTable({
-    startY: 72,
+    startY: 82,
     head: [['#','Product / Item','Amount (₹)']],
     body: tdata,
-    foot: [[{content:'TOTAL', colSpan:2, styles:{halign:'right', fontStyle:'bold', fontSize:9}},
+    foot: [[{content:'No. of Products: '+(inv.productCount||items.length), colSpan:1, styles:{halign:'left', fontStyle:'bold', fontSize:8}},
+      {content:'TOTAL', styles:{halign:'right', fontStyle:'bold', fontSize:9}},
       {content: fmtN(inv.totalAmount||0), styles:{halign:'right', fontStyle:'bold', fontSize:9}}]],
     theme:'grid',
     headStyles:{fillColor:[0,131,143], textColor:[255,255,255], fontSize:9, fontStyle:'bold', halign:'center'},
@@ -4770,18 +4853,6 @@ function buildQPDF(inv){
   var Y = doc.lastAutoTable.finalY + 8;
   doc.setFontSize(8); doc.setFont('helvetica','italic'); doc.setTextColor(30,30,30);
   doc.text('Amount in Words: INR '+n2w(Math.round(inv.totalAmount||0))+' Only', M, Y);
-
-  var SY = Y + 14;
-  doc.setFont('helvetica','bold'); doc.setFontSize(9); doc.setTextColor(0,131,143);
-  doc.text('For '+(c.name||'Company'), W-M, SY, {align:'right'});
-  if(_signB64){
-    try{ doc.addImage(_signB64,'PNG',W-M-36,SY+2,32,16); }catch(e){}
-  } else {
-    doc.setDrawColor(180,180,180); doc.setLineWidth(0.2);
-    doc.line(W-52, SY+16, W-M, SY+16);
-  }
-  doc.setFont('helvetica','normal'); doc.setFontSize(8); doc.setTextColor(30,30,30);
-  doc.text(c.signatoryName||'Signatory', W-M, SY+20, {align:'right'});
 
   return doc;
 }
