@@ -1012,7 +1012,7 @@ select option{background:#0d180d;color:var(--t1);}
     </div>
 
     <div class="sech" style="margin:4px 0"><span class="mi material-icons-round">list</span>Product Details</div>
-    <div class="info-tip">💡 Enter the exact amount for each product — no GST is added or calculated.</div>
+    <div class="info-tip">💡 Enter quantity and unit rate for each product; total amount is calculated automatically.</div>
 
     <div id="qitems-wrap"></div>
     <button class="add-item-btn" onclick="addQItem()" type="button">
@@ -4534,7 +4534,18 @@ loadData = function(){
 // ── Open Quick Invoice Form ──
 function openQInvF(inv){
   _eqid = inv ? inv.id : null;
-  _qitems = (inv && inv.items) ? JSON.parse(JSON.stringify(inv.items)) : [{name:'', amount:0}];
+  _qitems = (inv && inv.items) ? JSON.parse(JSON.stringify(inv.items)).map(function(it){
+    var qty = parseFloat(it.qty || it.quantity || 0) || 0;
+    var rate = parseFloat(it.rate || it.unitPrice || 0) || 0;
+    if(!qty && it.amount){ qty = 1; }
+    if(!rate && qty && it.amount){ rate = parseFloat(it.amount) / qty || 0; }
+    return {
+      name: it.name || '',
+      qty: qty || 0,
+      rate: rate || 0,
+      amount: parseFloat(it.amount || (qty * rate) || 0) || 0
+    };
+  }) : [{name:'', qty:1, rate:0, amount:0}];
   g('qinvft').textContent = inv ? 'Edit Quick Invoice' : 'New Quick Invoice';
   g('qino').value = inv ? inv.invoiceNumber : qNextNo();
   g('qidt').value = (inv && inv.invoiceDate) ? inv.invoiceDate : td();
@@ -4588,15 +4599,21 @@ function buildQItemRows(){
       +'<input id="qiname-'+i+'" value="" placeholder="Product / material name" autocomplete="off"/>'
       +'<div id="qprod-sugg-'+i+'" style="display:none;background:var(--card);border:1px solid var(--bdr);border-radius:8px;margin-top:2px;max-height:160px;overflow-y:auto;box-shadow:var(--sh);position:relative;z-index:99;"></div>'
       +'</div>'
-      +'<div class="fg"><label>Exact Amount ₹ *</label><input type="number" id="qiamt-'+i+'" value="" placeholder="0.00" min="0"/></div>'
+      +'<div class="fr">'
+        +'<div class="fg" style="flex:1;margin-right:8px"><label>Quantity *</label><input type="number" id="qiqty-'+i+'" value="" placeholder="0" min="0" step="any"/></div>'
+        +'<div class="fg" style="flex:1"><label>Unit Rate ₹ *</label><input type="number" id="qiprice-'+i+'" value="" placeholder="0.00" min="0" step="any"/></div>'
+      +'</div>'
+      +'<div class="fg"><label>Amount ₹</label><input type="number" id="qiamt-'+i+'" value="" placeholder="0.00" min="0" readonly/></div>'
       +'</div>';
   });
   wrap.innerHTML = html;
   _qitems.forEach(function(it, i){
-    var nm = g('qiname-'+i), amt = g('qiamt-'+i);
+    var nm = g('qiname-'+i), qty = g('qiqty-'+i), price = g('qiprice-'+i), amt = g('qiamt-'+i);
     if(nm) nm.value = it.name || '';
+    if(qty) qty.value = it.qty != null ? it.qty : '';
+    if(price) price.value = it.rate != null ? it.rate : '';
     if(amt) amt.value = it.amount || '';
-    [nm, amt].forEach(function(el){
+    [nm, qty, price].forEach(function(el){
       if(el) el.addEventListener('input', function(){ syncQItems(); recalcQTotals(); });
     });
     // Product-name autocomplete — pulls from existing Inventory products (name only, no price/HSN copied)
@@ -4628,7 +4645,7 @@ function fillQProdItem(idx, pid){
 
 function addQItem(){
   syncQItems();
-  _qitems.push({name:'', amount:0});
+  _qitems.push({name:'', qty:1, rate:0, amount:0});
   buildQItemRows();
   var wrap = g('qitems-wrap');
   if(wrap) wrap.lastElementChild && wrap.lastElementChild.scrollIntoView({behavior:'smooth'});
@@ -4636,13 +4653,16 @@ function addQItem(){
 function removeQItem(idx){
   syncQItems();
   _qitems.splice(idx, 1);
-  if(_qitems.length === 0) _qitems.push({name:'', amount:0});
+  if(_qitems.length === 0) _qitems.push({name:'', qty:1, rate:0, amount:0});
   buildQItemRows();
 }
 function syncQItems(){
   _qitems.forEach(function(it, i){
     if(g('qiname-'+i)) it.name = g('qiname-'+i).value.trim();
-    if(g('qiamt-'+i)) it.amount = parseFloat(g('qiamt-'+i).value) || 0;
+    if(g('qiqty-'+i)) it.qty = parseFloat(g('qiqty-'+i).value) || 0;
+    if(g('qiprice-'+i)) it.rate = parseFloat(g('qiprice-'+i).value) || 0;
+    it.amount = Math.round((it.qty * it.rate) * 100) / 100;
+    if(g('qiamt-'+i)) g('qiamt-'+i).value = it.amount || '';
   });
 }
 function recalcQTotals(){
@@ -4685,8 +4705,8 @@ function saveQInv(){
   var no = gv('qino'), recv = gv('qirecv');
   if(!no){ toast('Invoice number is required','r'); return; }
   if(!recv){ toast('Receiver name is required','r'); return; }
-  var filled = _qitems.filter(function(it){ return it.name && it.amount > 0; });
-  if(!filled.length){ toast('Add at least one product with name & amount','r'); return; }
+  var filled = _qitems.filter(function(it){ return it.name && it.qty > 0 && it.rate > 0; });
+  if(!filled.length){ toast('Add at least one product with name, quantity and rate','r'); return; }
   var total = filled.reduce(function(s, it){ return s + (it.amount||0); }, 0);
 
   var d = {
@@ -4768,7 +4788,7 @@ function openQDetail(inv){
     +'<div class="drow"><span>No. of Products</span><span>'+(inv.productCount||items.length)+'</span></div>'
     +'</div>'
     +'<div class="dcard"><h4>Products</h4>'
-    +items.map(function(it){ return '<div class="drow"><span>'+(it.name||'Item')+'</span><span>'+fmt(it.amount)+'</span></div>'; }).join('')
+    +items.map(function(it){ return '<div class="drow"><span>'+(it.name||'Item')+'</span><span>'+it.qty+' × '+fmt(it.rate)+' = '+fmt(it.amount)+'</span></div>'; }).join('')
     +'<div class="drow dtotal"><span>Total Amount</span><span>'+fmt(inv.totalAmount)+'</span></div>'
     +'<div style="font-size:11px;color:var(--t2);margin-top:6px;font-style:italic">'+n2w(Math.round(inv.totalAmount||0))+' Only</div>'
     +'</div>';
@@ -4833,20 +4853,20 @@ function buildQPDF(inv){
 
   // Products table
   var items = inv.items || [];
-  var tdata = items.map(function(it, i){ return [(i+1).toString(), it.name||'', fmtN(it.amount||0)]; });
+  var tdata = items.map(function(it, i){ return [(i+1).toString(), it.name||'', (it.qty||0).toString(), fmtN(it.rate||0), fmtN(it.amount||0)]; });
 
   doc.autoTable({
     startY: 82,
-    head: [['#','Product / Item','Amount (₹)']],
+    head: [['#','Product / Item','Qty','Rate (₹)','Amount (₹)']],
     body: tdata,
-    foot: [[{content:'No. of Products: '+(inv.productCount||items.length), colSpan:1, styles:{halign:'left', fontStyle:'bold', fontSize:8}},
+    foot: [[{content:'No. of Products: '+(inv.productCount||items.length), colSpan:3, styles:{halign:'left', fontStyle:'bold', fontSize:8}},
       {content:'TOTAL', styles:{halign:'right', fontStyle:'bold', fontSize:9}},
       {content: fmtN(inv.totalAmount||0), styles:{halign:'right', fontStyle:'bold', fontSize:9}}]],
     theme:'grid',
     headStyles:{fillColor:[0,131,143], textColor:[255,255,255], fontSize:9, fontStyle:'bold', halign:'center'},
     bodyStyles:{fontSize:9, textColor:[30,30,30]},
     footStyles:{fillColor:[245,245,245], fontSize:9, textColor:[30,30,30]},
-    columnStyles:{0:{cellWidth:12,halign:'center'}, 1:{cellWidth:'auto'}, 2:{cellWidth:40,halign:'right'}},
+    columnStyles:{0:{cellWidth:10,halign:'center'}, 1:{cellWidth:'auto'}, 2:{cellWidth:18,halign:'center'}, 3:{cellWidth:30,halign:'right'}, 4:{cellWidth:35,halign:'right'}},
     margin:{left:M, right:M}
   });
 
