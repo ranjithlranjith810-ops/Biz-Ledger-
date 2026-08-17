@@ -4,12 +4,12 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no">
 <meta name="mobile-web-app-capable" content="yes">
-<meta name="theme-color" content="#000F08">
+<meta name="theme-color" content="#081B30">
 <meta name="apple-mobile-web-app-capable" content="yes">
 <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
 <meta name="apple-mobile-web-app-title" content="BizLedger">
 <link rel="manifest" href="./manifest.json">
-<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23000F08'/><rect width='100' height='100' rx='22' fill='url(%23g)' opacity='.3'/><defs><radialGradient id='g' cx='50%25' cy='50%25'><stop offset='0' stop-color='%23FB3640' stop-opacity='.4'/><stop offset='100%25' stop-color='transparent'/></radialGradient></defs><text y='78' x='12' font-size='80' font-family='Georgia,serif' font-weight='900' fill='%23FB3640'>B</text></svg>">
+<link rel="apple-touch-icon" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'><rect width='100' height='100' rx='22' fill='%23081B30'/><rect width='100' height='100' rx='22' fill='url(%23g)' opacity='.3'/><defs><radialGradient id='g' cx='50%25' cy='50%25'><stop offset='0' stop-color='%231E88E5' stop-opacity='.4'/><stop offset='100%25' stop-color='transparent'/></radialGradient></defs><text y='78' x='12' font-size='80' font-family='Georgia,serif' font-weight='900' fill='%231E88E5'>B</text></svg>">
 
 <title>BizLedger Pro</title>
 <script src="https://www.gstatic.com/firebasejs/9.23.0/firebase-app-compat.js"></script>
@@ -28,7 +28,7 @@
   <link rel="stylesheet" href="https://fonts.googleapis.com/icon?family=Material+Icons+Round">
 </noscript>
 <style>
-:root{--p:#FB3640;--pd:#d42b34;--sec:#ff6b70;--ok:#43A047;--warn:#FFB300;--err:#ff4444;--bg:#0a120a;--card:#0f1a0f;--t1:#f0ede8;--t2:#8a9e8a;--t3:#3a4a3a;--bdr:#1e2e1e;--div:#172017;--sh:0 2px 12px rgba(0,0,0,.4);}
+:root{--p:#1E88E5;--pd:#1565C0;--sec:#64B5F6;--ok:#43A047;--warn:#FFB300;--err:#ff4444;--bg:#0A1626;--card:#0E1B33;--t1:#f0ede8;--t2:#8FA3C2;--t3:#3D5070;--bdr:#1C2E4A;--div:#152238;--sh:0 2px 12px rgba(0,0,0,.4);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
 html,body{height:100%;overflow-x:hidden;}
 body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(--t1);}
@@ -37,7 +37,7 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
    ══════════════════════════════ */
 #S{
   position:fixed;inset:0;
-  background:#000F08;
+  background:#081B30;
   display:flex;flex-direction:column;align-items:center;justify-content:center;
   z-index:9999;overflow:hidden;
 }
@@ -46,7 +46,7 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 #S::before{
   content:'';position:absolute;
   width:320px;height:320px;
-  background:radial-gradient(circle, rgba(251,54,64,.18) 0%, transparent 70%);
+  background:radial-gradient(circle, rgba(30,136,229,.18) 0%, transparent 70%);
   border-radius:50%;
   animation:splashGlow 2.4s ease-in-out infinite alternate;
 }
@@ -58,11 +58,11 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 /* Logo icon box */
 .si{
   width:100px;height:100px;
-  background:linear-gradient(145deg,#1a0606,#0a0a0a);
+  background:linear-gradient(145deg,#0A1830,#0a0a0a);
   border-radius:28px;
   display:flex;align-items:center;justify-content:center;
   margin-bottom:24px;
-  box-shadow:0 0 0 1px rgba(251,54,64,.35), 0 8px 40px rgba(251,54,64,.25), 0 2px 12px rgba(0,0,0,.8);
+  box-shadow:0 0 0 1px rgba(30,136,229,.35), 0 8px 40px rgba(30,136,229,.25), 0 2px 12px rgba(0,0,0,.8);
   position:relative;z-index:1;
   animation:logoEntrance .7s cubic-bezier(.34,1.56,.64,1) both;
 }
@@ -76,16 +76,16 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
   font-family:'Bona Nova SC', 'Georgia', serif;
   font-weight:700;
   font-size:62px;
-  color:#FB3640;
+  color:#1E88E5;
   line-height:1;
   letter-spacing:-2px;
-  text-shadow:0 0 20px rgba(251,54,64,.6), 0 2px 4px rgba(0,0,0,.8);
+  text-shadow:0 0 20px rgba(30,136,229,.6), 0 2px 4px rgba(0,0,0,.8);
   animation:bPulse 2.4s ease-in-out infinite;
   position:relative;top:2px;
 }
 @keyframes bPulse{
-  0%,100%{text-shadow:0 0 20px rgba(251,54,64,.6),0 2px 4px rgba(0,0,0,.8);}
-  50%{text-shadow:0 0 35px rgba(251,54,64,.9),0 0 60px rgba(251,54,64,.3),0 2px 4px rgba(0,0,0,.8);}
+  0%,100%{text-shadow:0 0 20px rgba(30,136,229,.6),0 2px 4px rgba(0,0,0,.8);}
+  50%{text-shadow:0 0 35px rgba(30,136,229,.9),0 0 60px rgba(30,136,229,.3),0 2px 4px rgba(0,0,0,.8);}
 }
 
 /* Red corner accent on logo box */
@@ -93,7 +93,7 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
   content:'';position:absolute;
   bottom:0;right:0;
   width:28px;height:28px;
-  background:linear-gradient(135deg,transparent 50%,rgba(251,54,64,.5) 50%);
+  background:linear-gradient(135deg,transparent 50%,rgba(30,136,229,.5) 50%);
   border-radius:0 0 28px 0;
 }
 
@@ -134,7 +134,7 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 }
 .spf{
   height:100%;
-  background:linear-gradient(90deg,#FB3640,#ff6b6b,#FB3640);
+  background:linear-gradient(90deg,#1E88E5,#64B5F6,#1E88E5);
   background-size:200% 100%;
   border-radius:2px;
   animation:sp 1.6s ease-in-out infinite, shimmerBar 1.6s linear infinite;
@@ -147,7 +147,7 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 .sp-dot{
   position:absolute;
   border-radius:50%;
-  background:rgba(251,54,64,.5);
+  background:rgba(30,136,229,.5);
   animation:floatDot linear infinite;
 }
 @keyframes floatDot{
@@ -157,32 +157,32 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
   100%{transform:translateY(-120px) scale(1);opacity:0;}
 }
 /* AUTH */
-#A{display:none;min-height:100vh;overflow-y:auto;background:linear-gradient(180deg,#000F08,#0d1a0d);padding:32px 20px 48px;}
+#A{display:none;min-height:100vh;overflow-y:auto;background:linear-gradient(180deg,#081B30,#0C1B33);padding:32px 20px 48px;}
 .aw{width:100%;max-width:400px;margin:0 auto;}
 .alo{display:flex;flex-direction:column;align-items:center;margin-bottom:28px;}
-.aic{width:68px;height:68px;background:linear-gradient(145deg,#1a0606,#0a0a0a);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 0 0 1px rgba(251,54,64,.3),0 8px 24px rgba(251,54,64,.15);}
+.aic{width:68px;height:68px;background:linear-gradient(145deg,#0A1830,#0a0a0a);border-radius:18px;display:flex;align-items:center;justify-content:center;margin-bottom:12px;box-shadow:0 0 0 1px rgba(30,136,229,.3),0 8px 24px rgba(30,136,229,.15);}
 .aic svg{width:36px;height:36px;}
 .alo h1{color:#fff;font-size:24px;font-weight:700;font-family:'Bona Nova SC','Georgia',serif;letter-spacing:.5px;}
 .alo small{color:rgba(255,255,255,.6);font-size:12px;}
-.acard{background:#0f1a0f;border-radius:20px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.22);}
+.acard{background:#0E1B33;border-radius:20px;padding:26px;box-shadow:0 20px 60px rgba(0,0,0,.22);}
 .acard h2{font-size:19px;font-weight:700;color:var(--p);margin-bottom:3px;}
 .asub{color:var(--t2);font-size:12px;margin-bottom:20px;}
 .aerr{background:#1a0a0a;border-radius:8px;padding:10px 12px;font-size:12px;color:#C62828;margin-bottom:12px;display:none;}
 .atog{text-align:center;margin-top:14px;}
 .atog button{border:none;background:none;color:var(--p);font-family:inherit;font-size:13px;font-weight:500;cursor:pointer;padding:4px;}
 /* SETUP */
-#C{display:none;min-height:100vh;background:linear-gradient(135deg,#000F08,#1a2e1a);}
+#C{display:none;min-height:100vh;background:linear-gradient(135deg,#081B30,#16305C);}
 .chdr{padding:50px 24px 22px;text-align:center;}
 .chdr svg{width:44px;height:44px;fill:#fff;margin-bottom:10px;}
 .chdr h2{color:#fff;font-size:21px;font-weight:700;margin-bottom:4px;}
 .chdr p{color:rgba(255,255,255,.68);font-size:12px;}
-.cbdy{background:#0f1a0f;border-radius:28px 28px 0 0;padding:22px 20px 48px;min-height:72vh;}
+.cbdy{background:#0E1B33;border-radius:28px 28px 0 0;padding:22px 20px 48px;min-height:72vh;}
 /* APP */
 #APP{display:none;flex-direction:column;min-height:100vh;}
 .page{display:none;padding-bottom:72px;}
 .page.on{display:block;animation:pi .18s ease;}
 @keyframes pi{from{opacity:0;transform:translateY(5px)}to{opacity:1}}
-.bar{height:54px;background:linear-gradient(135deg,#000F08,#1e0808);border-bottom:1px solid rgba(251,54,64,.3);display:flex;align-items:center;padding:0 14px;position:sticky;top:0;z-index:80;box-shadow:0 2px 12px rgba(0,0,0,.5);}
+.bar{height:54px;background:linear-gradient(135deg,#081B30,#122545);border-bottom:1px solid rgba(30,136,229,.3);display:flex;align-items:center;padding:0 14px;position:sticky;top:0;z-index:80;box-shadow:0 2px 12px rgba(0,0,0,.5);}
 .bar .ttl{color:#fff;font-size:16px;font-weight:600;flex:1;}
 .ibtn{width:38px;height:38px;border:none;background:none;color:#fff;cursor:pointer;border-radius:50%;display:flex;align-items:center;justify-content:center;}
 .ibtn:active{background:rgba(255,255,255,.15);}
@@ -192,7 +192,7 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 .ni .lb{font-size:10px;color:#9E9E9E;font-weight:500;font-family:inherit;}
 .ni.on .ic,.ni.on .lb{color:var(--p);}
 /* DASHBOARD */
-.dhdr{background:linear-gradient(135deg,#000F08,#1e0a0b);padding:54px 16px 18px;position:relative;}
+.dhdr{background:linear-gradient(135deg,#081B30,#101F38);padding:54px 16px 18px;position:relative;}
 .dgr{color:rgba(255,255,255,.65);font-size:11px;}
 .dnm{color:#fff;font-size:19px;font-weight:700;}
 .dco{color:rgba(255,255,255,.55);font-size:11px;margin-top:1px;}
@@ -220,7 +220,7 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 .rct{font-size:12px;font-weight:700;color:var(--p);margin-bottom:10px;}
 .ri{display:flex;align-items:center;gap:10px;padding:7px 0;border-bottom:1px solid var(--div);}
 .ri:last-child{border-bottom:none;}
-.riic{width:34px;height:34px;border-radius:8px;background:rgba(251,54,64,.10);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
+.riic{width:34px;height:34px;border-radius:8px;background:rgba(30,136,229,.10);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .riic .mi{font-size:17px;color:var(--p);}
 /* LIST CARDS */
 .lc{margin:0 10px 8px;background:var(--card);border-radius:12px;padding:13px;box-shadow:var(--sh);display:flex;align-items:center;gap:11px;cursor:pointer;}
@@ -236,11 +236,11 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 .dbtn .mi{font-size:18px;}
 /* BADGES */
 .bg{display:inline-block;padding:2px 8px;border-radius:10px;font-size:10px;font-weight:600;margin-top:3px;}
-.bg-paid{background:#0f1a0f;color:#2E7D32;}.bg-draft,.bg-pending{background:#FFF9C4;color:#F57F17;}
-.bg-overdue{background:#1a0a0a;color:#C62828;}.bg-sent{background:#0f1a0f;color:#1565C0;}
+.bg-paid{background:#0E1B33;color:#2E7D32;}.bg-draft,.bg-pending{background:#FFF9C4;color:#F57F17;}
+.bg-overdue{background:#1a0a0a;color:#C62828;}.bg-sent{background:#0E1B33;color:#1565C0;}
 .bg-partial{background:#1a150a;color:#E65100;}.bg-cancelled{background:#F5F5F5;color:#616161;}
 /* TABS */
-.tabs{display:flex;background:#000F08;border-bottom:1px solid var(--bdr);}
+.tabs{display:flex;background:#081B30;border-bottom:1px solid var(--bdr);}
 .tb{flex:1;padding:10px;text-align:center;font-size:13px;font-weight:500;color:rgba(255,255,255,.6);cursor:pointer;border-bottom:2.5px solid transparent;font-family:inherit;background:none;border-top:none;border-left:none;border-right:none;}
 .tb.on{color:var(--p);border-bottom-color:var(--p);}
 /* SEARCH */
@@ -255,7 +255,7 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 /* FORMS */
 .fg{margin-bottom:12px;}
 .fg label{display:block;font-size:10px;font-weight:700;letter-spacing:.4px;color:var(--t2);margin-bottom:4px;text-transform:uppercase;}
-.fg input,.fg select,.fg textarea{width:100%;padding:10px 13px;border:1.5px solid var(--bdr);border-radius:10px;font-size:13px;font-family:inherit;background:#0d180d;color:var(--t1);outline:none;transition:border-color .15s;}
+.fg input,.fg select,.fg textarea{width:100%;padding:10px 13px;border:1.5px solid var(--bdr);border-radius:10px;font-size:13px;font-family:inherit;background:#0C1B30;color:var(--t1);outline:none;transition:border-color .15s;}
 .fg input:focus,.fg select:focus,.fg textarea:focus{border-color:var(--p);}
 .fg input[readonly]{background:#F7F7F7;color:var(--t2);}
 .fg textarea{resize:vertical;min-height:56px;}
@@ -286,14 +286,14 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 .dlg p{font-size:13px;color:var(--t2);margin-bottom:18px;line-height:1.5;}
 .dlga{display:flex;gap:10px;}
 .dlga .btn{padding:10px;flex:1;}
-.btncancel{background:#0f1a0f;color:var(--t1);}
+.btncancel{background:#0E1B33;color:var(--t1);}
 .btnred{background:var(--err);color:#fff;}
 /* SEGMENT */
 .seg{display:flex;background:#F0F2F8;border-radius:10px;padding:3px;gap:2px;margin-bottom:12px;}
 .segb{flex:1;padding:8px 4px;border:none;background:none;border-radius:8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;color:var(--t2);}
 .segb.on{background:#fff;color:var(--p);box-shadow:0 1px 4px rgba(0,0,0,.1);}
 /* MORE */
-.mc{margin:10px;border-radius:16px;padding:15px;background:linear-gradient(135deg,#000F08,#1a2e1a);display:flex;align-items:center;gap:12px;}
+.mc{margin:10px;border-radius:16px;padding:15px;background:linear-gradient(135deg,#081B30,#16305C);display:flex;align-items:center;gap:12px;}
 .mcic{width:46px;height:46px;border-radius:12px;background:rgba(255,255,255,.2);display:flex;align-items:center;justify-content:center;flex-shrink:0;}
 .mcic .mi{font-size:24px;color:#fff;}
 .mci{flex:1;min-width:0;}
@@ -316,10 +316,10 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 .item-card{background:#F7F8FC;border-radius:10px;padding:12px;margin-bottom:10px;border:1px solid var(--div);position:relative;}
 .item-card .rm-btn{position:absolute;top:8px;right:8px;border:none;background:#1a0a0a;color:var(--err);cursor:pointer;border-radius:6px;width:28px;height:28px;display:flex;align-items:center;justify-content:center;}
 .item-card .rm-btn .mi{font-size:16px;}
-.add-item-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border:2px dashed var(--p);border-radius:10px;background:rgba(251,54,64,.05);color:var(--p);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:14px;}
+.add-item-btn{display:flex;align-items:center;justify-content:center;gap:8px;width:100%;padding:11px;border:2px dashed var(--p);border-radius:10px;background:rgba(30,136,229,.05);color:var(--p);font-size:13px;font-weight:600;font-family:inherit;cursor:pointer;margin-bottom:14px;}
 .item-total{text-align:right;font-size:13px;font-weight:700;color:var(--p);margin-top:6px;}
 /* TOTALS BOX */
-.total-box{background:#0d180d;border-radius:10px;padding:13px;margin-bottom:14px;border:1px solid rgba(251,54,64,.25);}
+.total-box{background:#0C1B30;border-radius:10px;padding:13px;margin-bottom:14px;border:1px solid rgba(30,136,229,.25);}
 .trow{display:flex;justify-content:space-between;padding:4px 0;font-size:13px;}
 .trow.grand{font-weight:700;font-size:15px;color:var(--p);border-top:2px solid var(--p);margin-top:6px;padding-top:8px;}
 .trow.words{font-style:italic;color:var(--t2);font-size:11px;margin-top:4px;}
@@ -393,24 +393,24 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 .qa .mi{font-size:22px;display:block;margin-bottom:4px;}
 .qa span{font-size:11px;font-weight:600;color:var(--t2);display:block;line-height:1.3;}
 /* EXTRA BADGES */
-.bg-quotation{background:#0f1a0f;color:var(--p);} .bg-active{background:#0f1a0f;color:#2E7D32;}
+.bg-quotation{background:#0E1B33;color:var(--p);} .bg-active{background:#0E1B33;color:#2E7D32;}
 .bg-idle{background:#F5F5F5;color:#616161;} .bg-maintenance{background:#1a150a;color:#E65100;}
 /* BUTTONS */
-.btng{background:#0f1a0f;color:#2E7D32;border:none;}
+.btng{background:#0E1B33;color:#2E7D32;border:none;}
 .warn-tip{background:#FFF8E1;border-radius:8px;padding:9px 12px;font-size:12px;color:#795548;margin-bottom:12px;line-height:1.5;}
 /* SUGG DROPDOWN */
 .sugg-item{padding:10px 14px;cursor:pointer;font-size:13px;border-bottom:1px solid var(--div);}
 .sugg-item:last-child{border-bottom:none;}
-.sugg-item:active{background:#1a2e1a;}
+.sugg-item:active{background:#16305C;}
 
 .mt8{margin-top:8px;}.mt12{margin-top:12px;}.mt16{margin-top:16px;}.mt20{margin-top:20px;}
 .spin{animation:rot .7s linear infinite;}@keyframes rot{to{transform:rotate(360deg)}}
-.info-tip{background:rgba(251,54,64,.07);border:1px solid rgba(251,54,64,.18);border-radius:8px;padding:9px 12px;font-size:12px;color:#FB3640;margin-bottom:12px;line-height:1.5;}
+.info-tip{background:rgba(30,136,229,.07);border:1px solid rgba(30,136,229,.18);border-radius:8px;padding:9px 12px;font-size:12px;color:#1E88E5;margin-bottom:12px;line-height:1.5;}
 input::placeholder,.fg textarea::placeholder{color:#3a5a3a !important;}
-select option{background:#0d180d;color:var(--t1);}
+select option{background:#0C1B30;color:var(--t1);}
 
 /* ── SKELETON LOADERS ── */
-.skel{background:linear-gradient(90deg,var(--card) 25%,#1a2e1a 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;}
+.skel{background:linear-gradient(90deg,var(--card) 25%,#16305C 50%,var(--card) 75%);background-size:200% 100%;animation:shimmer 1.4s infinite;border-radius:8px;}
 @keyframes shimmer{0%{background-position:200% 0}100%{background-position:-200% 0}}
 .skel-card{height:72px;margin:0 10px 8px;border-radius:12px;}
 .skel-kpi{height:58px;border-radius:12px;}
@@ -419,29 +419,29 @@ select option{background:#0d180d;color:var(--t1);}
 .skel-wrap{padding:0 10px;}
 
 /* ── INSTANT TOUCH FEEDBACK ── */
-.lc.touching{background:#1a2e1a !important;transform:scale(.985);}
+.lc.touching{background:#16305C !important;transform:scale(.985);}
 .btn.touching,.btnp.touching{filter:brightness(.88);transform:scale(.98);}
 .ibtn.touching{background:rgba(255,255,255,.2) !important;transform:scale(.85);}
 .ni.touching{transform:scale(.88);}
-.qa.touching{background:#1a2e1a !important;transform:scale(.92);}
+.qa.touching{background:#16305C !important;transform:scale(.92);}
 .qs.touching{transform:scale(.92);}
-.veh-card.touching{background:#1a2e1a;transform:scale(.97);}
+.veh-card.touching{background:#16305C;transform:scale(.97);}
 .emp-card.touching{transform:scale(.97);}
-.mirow.touching{background:#1a2e1a !important;transform:translateX(3px);}
+.mirow.touching{background:#16305C !important;transform:translateX(3px);}
 .tb.touching{opacity:.7;}
 .tpl-card.touching{transform:scale(.95) !important;}
 .fab.touching{transform:scale(.92) !important;animation:none;}
 .share-btn.touching{transform:scale(.95);filter:brightness(.88);}
 .dbtn.touching{transform:scale(.82);color:var(--err);}
-.add-item-btn.touching{transform:scale(.97);background:rgba(251,54,64,.1);}
+.add-item-btn.touching{transform:scale(.97);background:rgba(30,136,229,.1);}
 .segb.touching{transform:scale(.95);}
 .shcls.touching{background:rgba(255,255,255,.15);transform:scale(.88);}
 
 /* ── TOUCH & INTERACTION POLISH ── */
 /* Fix lc active — was light color on dark theme */
-.lc:active{background:#1a2e1a !important;transform:scale(.985);}
-.mirow:active{background:#1a2e1a !important;}
-.qa:active{background:#1a2e1a !important;transform:scale(.92);}
+.lc:active{background:#16305C !important;transform:scale(.985);}
+.mirow:active{background:#16305C !important;}
+.qa:active{background:#16305C !important;transform:scale(.92);}
 
 /* Nav bar touch feedback */
 .ni{transition:transform .12s;}
@@ -453,7 +453,7 @@ select option{background:#0d180d;color:var(--t1);}
 
 /* Vehicles, employee cards */
 .veh-card{transition:transform .14s,box-shadow .14s;}
-.veh-card:active{transform:scale(.97);background:#1a2e1a;}
+.veh-card:active{transform:scale(.97);background:#16305C;}
 .emp-card{transition:transform .14s;}
 .emp-card:active{transform:scale(.97);}
 
@@ -497,13 +497,13 @@ select option{background:#0d180d;color:var(--t1);}
 /* Input focus ring */
 .fg input:focus,.fg select:focus,.fg textarea:focus{
   border-color:var(--p);
-  box-shadow:0 0 0 3px rgba(251,54,64,.15);
+  box-shadow:0 0 0 3px rgba(30,136,229,.15);
   transition:border-color .15s,box-shadow .15s;
 }
 
 /* Add item button press */
 .add-item-btn{transition:transform .12s,background .12s;}
-.add-item-btn:active{transform:scale(.97);background:rgba(251,54,64,.1);}
+.add-item-btn:active{transform:scale(.97);background:rgba(30,136,229,.1);}
 
 /* Tpl card active */
 .tpl-card:active{transform:scale(.95) !important;}
@@ -538,7 +538,7 @@ select option{background:#0d180d;color:var(--t1);}
 .qa:active{transform:scale(.94);}
 /* FAB pulse */
 .fab{animation:fabPulse 2.4s ease-in-out infinite;}
-@keyframes fabPulse{0%,100%{box-shadow:0 4px 16px rgba(251,54,64,.38)}50%{box-shadow:0 4px 28px rgba(251,54,64,.65)}}
+@keyframes fabPulse{0%,100%{box-shadow:0 4px 16px rgba(30,136,229,.38)}50%{box-shadow:0 4px 28px rgba(30,136,229,.65)}}
 
 /* Nav active dot */
 .ni.on::after{content:'';display:block;width:4px;height:4px;background:var(--p);border-radius:50%;margin:0 auto;}
@@ -601,7 +601,7 @@ select option{background:#0d180d;color:var(--t1);}
 <div id="A">
   <div class="aw">
     <div class="alo">
-      <div class="aic"><span style="font-family:'Bona Nova SC','Georgia',serif;font-weight:700;font-size:38px;color:#FB3640;line-height:1;text-shadow:0 0 12px rgba(251,54,64,.4)">B</span></div>
+      <div class="aic"><span style="font-family:'Bona Nova SC','Georgia',serif;font-weight:700;font-size:38px;color:#1E88E5;line-height:1;text-shadow:0 0 12px rgba(30,136,229,.4)">B</span></div>
       <h1>BizLedger Pro</h1><small>Complete Business Management</small>
     </div>
     <div class="acard">
@@ -663,7 +663,7 @@ select option{background:#0d180d;color:var(--t1);}
       <div class="fg"><label>Your Prefix <small style="color:var(--t2)">(e.g. MI/, VRI/)</small></label><input id="cpfx" placeholder="INV/" oninput="updInvPreview()"/></div>
       <div class="fg"><label>Start Number</label><input id="cinvstart" type="number" value="1" min="1" placeholder="1" oninput="updInvPreview()"/></div>
     </div>
-    <div id="inv-preview-box" style="background:#0f1a0f;border-radius:8px;padding:10px 14px;font-size:12px;color:var(--p);font-weight:600;margin-bottom:4px">
+    <div id="inv-preview-box" style="background:#0E1B33;border-radius:8px;padding:10px 14px;font-size:12px;color:var(--p);font-weight:600;margin-bottom:4px">
       Preview: <span id="inv-no-preview">INV/25-26/001</span>
     </div>
     <div class="fg"><label>Financial Year</label>
@@ -744,7 +744,7 @@ select option{background:#0d180d;color:var(--t1);}
       <span id="fy-inv-count" style="font-size:11px;color:var(--t2)"></span>
     </div>
     <!-- Draft / Official toggle -->
-    <div style="display:flex;gap:0;margin:8px 14px 0;background:#0f1a0f;border-radius:10px;padding:3px">
+    <div style="display:flex;gap:0;margin:8px 14px 0;background:#0E1B33;border-radius:10px;padding:3px">
       <button id="inv-mode-official" class="inv-mode-btn on" onclick="swInvMode('official',this)" style="flex:1;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;background:var(--p);color:#fff;transition:all .2s">
         <span class="mi material-icons-round" style="font-size:14px;vertical-align:-2px">verified</span> Official
       </button>
@@ -805,25 +805,25 @@ select option{background:#0d180d;color:var(--t1);}
     </div>
     <div class="sech" style="padding-left:10px;margin-top:4px"><span class="mi material-icons-round">business_center</span>Business</div>
     <div class="mm">
-      <div class="mirow" onclick="swPg('inv',null)"><div class="miico" style="background:#0f1a0f"><span class="mi material-icons-round" style="color:var(--ok)">inventory_2</span></div><div class="miinf"><div class="mit">Inventory</div><div class="mis">Products &amp; stock</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
-      <div class="mirow" onclick="swPg('p',null)"><div class="miico" style="background:#0f1a0f"><span class="mi material-icons-round" style="color:#FB3640">people</span></div><div class="miinf"><div class="mit">Parties</div><div class="mis">Customers &amp; suppliers</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
+      <div class="mirow" onclick="swPg('inv',null)"><div class="miico" style="background:#0E1B33"><span class="mi material-icons-round" style="color:var(--ok)">inventory_2</span></div><div class="miinf"><div class="mit">Inventory</div><div class="mis">Products &amp; stock</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
+      <div class="mirow" onclick="swPg('p',null)"><div class="miico" style="background:#0E1B33"><span class="mi material-icons-round" style="color:#1E88E5">people</span></div><div class="miinf"><div class="mit">Parties</div><div class="mis">Customers &amp; suppliers</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
       <div class="mirow" onclick="swPg('emp',null)"><div class="miico" style="background:#1a0f1a"><span class="mi material-icons-round" style="color:#cc88ff">badge</span></div><div class="miinf"><div class="mit">Payroll</div><div class="mis">Employees &amp; salary slips</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
       <div class="mirow" onclick="openEx()"><div class="miico" style="background:#1a150a"><span class="mi material-icons-round" style="color:#FFB300">attach_money</span></div><div class="miinf"><div class="mit">Expenses</div><div class="mis">Track all business expenses</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
-      <div class="mirow" onclick="openSign()"><div class="miico" style="background:#0f1a0f"><span class="mi material-icons-round" style="color:var(--p)">draw</span></div><div class="miinf"><div class="mit">Signature</div><div class="mis">Upload once — auto-added to PDF</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
-      <div class="mirow" onclick="openLogo()"><div class="miico" style="background:#0f1a0f" id="logo-menu-ic"><span class="mi material-icons-round" style="color:#FFB300">add_photo_alternate</span></div><div class="miinf"><div class="mit">Company Logo</div><div class="mis">Upload logo for PDF invoices</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
+      <div class="mirow" onclick="openSign()"><div class="miico" style="background:#0E1B33"><span class="mi material-icons-round" style="color:var(--p)">draw</span></div><div class="miinf"><div class="mit">Signature</div><div class="mis">Upload once — auto-added to PDF</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
+      <div class="mirow" onclick="openLogo()"><div class="miico" style="background:#0E1B33" id="logo-menu-ic"><span class="mi material-icons-round" style="color:#FFB300">add_photo_alternate</span></div><div class="miinf"><div class="mit">Company Logo</div><div class="mis">Upload logo for PDF invoices</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
       <div class="mirow" onclick="openInvSet()"><div class="miico" style="background:#0a1a1a"><span class="mi material-icons-round" style="color:#0097A7">receipt</span></div><div class="miinf"><div class="mit">Invoice Settings</div><div class="mis">Template, GST, prefix</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
     </div>
     <div class="sech" style="padding-left:10px"><span class="mi material-icons-round">bar_chart</span>Reports</div>
     <div class="mm">
-      <div class="mirow" onclick="openRp('sales')"><div class="miico" style="background:#0f1a0f"><span class="mi material-icons-round" style="color:var(--p)">bar_chart</span></div><div class="miinf"><div class="mit">Sales Report</div><div class="mis">View sales analytics</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
-      <div class="mirow" onclick="openRp('pl')"><div class="miico" style="background:#0f1a0f"><span class="mi material-icons-round" style="color:var(--ok)">trending_up</span></div><div class="miinf"><div class="mit">Profit &amp; Loss</div><div class="mis">P&amp;L statement</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
+      <div class="mirow" onclick="openRp('sales')"><div class="miico" style="background:#0E1B33"><span class="mi material-icons-round" style="color:var(--p)">bar_chart</span></div><div class="miinf"><div class="mit">Sales Report</div><div class="mis">View sales analytics</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
+      <div class="mirow" onclick="openRp('pl')"><div class="miico" style="background:#0E1B33"><span class="mi material-icons-round" style="color:var(--ok)">trending_up</span></div><div class="miinf"><div class="mit">Profit &amp; Loss</div><div class="mis">P&amp;L statement</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
       <div class="mirow" onclick="openRp('gst')"><div class="miico" style="background:#1a0f1a"><span class="mi material-icons-round" style="color:#cc88ff">receipt_long</span></div><div class="miinf"><div class="mit">GST Report</div><div class="mis">CGST / SGST / IGST summary</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
       <div class="mirow" onclick="openRp('stock')"><div class="miico" style="background:#1a1a0a"><span class="mi material-icons-round" style="color:#FFB300">inventory</span></div><div class="miinf"><div class="mit">Stock Report</div><div class="mis">Current stock levels</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
     </div>
     <div class="sech" style="padding-left:10px"><span class="mi material-icons-round">settings</span>Settings</div>
     <div class="mm">
-      <div class="mirow" onclick="openCoE()"><div class="miico" style="background:#0f1a0f"><span class="mi material-icons-round" style="color:var(--t2)">business_center</span></div><div class="miinf"><div class="mit">Company Profile</div><div class="mis">Edit company details</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
-      <div class="mirow" onclick="openTeam()"><div class="miico" style="background:#0f1a0f"><span class="mi material-icons-round" style="color:var(--ok)">group</span></div><div class="miinf"><div class="mit">Team Members</div><div class="mis">Multi-user access &amp; roles</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
+      <div class="mirow" onclick="openCoE()"><div class="miico" style="background:#0E1B33"><span class="mi material-icons-round" style="color:var(--t2)">business_center</span></div><div class="miinf"><div class="mit">Company Profile</div><div class="mis">Edit company details</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
+      <div class="mirow" onclick="openTeam()"><div class="miico" style="background:#0E1B33"><span class="mi material-icons-round" style="color:var(--ok)">group</span></div><div class="miinf"><div class="mit">Team Members</div><div class="mis">Multi-user access &amp; roles</div></div><div class="miarr"><span class="mi material-icons-round">chevron_right</span></div></div>
     </div>
     <div style="padding:14px 10px 4px"><button class="btn btno" onclick="g('dlglo').classList.add('on')"><span class="mi material-icons-round">logout</span>Sign Out</button></div>
     <p style="text-align:center;font-size:10px;color:var(--t3);padding:10px 0 24px">BizLedger Pro v3.0 · Firebase</p>
@@ -847,7 +847,7 @@ select option{background:#0d180d;color:var(--t1);}
     <div class="bar"><span class="ttl">Payments &amp; Collections</span><button class="ibtn" onclick="openPayF(null)"><span class="mi material-icons-round">add</span></button></div>
     <div class="tabs"><button class="tb on" id="tbrc" onclick="swPayTab('received',this)">Received</button><button class="tb" id="tbpd" onclick="swPayTab('paid',this)">Paid</button></div>
     <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;padding:8px 10px 4px">
-      <div style="background:#0f1a0f;border-radius:10px;padding:12px;text-align:center"><div style="font-size:10px;color:#2E7D32;font-weight:700;margin-bottom:4px">TO RECEIVE</div><div style="font-size:16px;font-weight:700;color:#2E7D32" id="pay-recv-total">&#8377;0</div></div>
+      <div style="background:#0E1B33;border-radius:10px;padding:12px;text-align:center"><div style="font-size:10px;color:#2E7D32;font-weight:700;margin-bottom:4px">TO RECEIVE</div><div style="font-size:16px;font-weight:700;color:#2E7D32" id="pay-recv-total">&#8377;0</div></div>
       <div style="background:#1a0a0a;border-radius:10px;padding:12px;text-align:center"><div style="font-size:10px;color:#C62828;font-weight:700;margin-bottom:4px">TO PAY</div><div style="font-size:16px;font-weight:700;color:#C62828" id="pay-pay-total">&#8377;0</div></div>
     </div>
     <div class="srch"><div class="srchb"><span class="mi material-icons-round">search</span><input id="pay-srch" placeholder="Search payments..." oninput="renderPay()"></div></div>
@@ -921,7 +921,7 @@ select option{background:#0d180d;color:var(--t1);}
 
     <!-- TOTALS -->
     <!-- Live Product Count Bar -->
-    <div id="inv-item-count-bar" style="display:flex;align-items:center;justify-content:space-between;background:#0d180d;border:1px solid rgba(251,54,64,.25);border-radius:10px;padding:10px 14px;margin-bottom:10px;">
+    <div id="inv-item-count-bar" style="display:flex;align-items:center;justify-content:space-between;background:#0C1B30;border:1px solid rgba(30,136,229,.25);border-radius:10px;padding:10px 14px;margin-bottom:10px;">
       <div style="display:flex;align-items:center;gap:8px;">
         <span class="mi material-icons-round" style="color:var(--p);font-size:18px">inventory_2</span>
         <span style="font-size:12px;color:var(--t2);font-weight:600">Total Products</span>
@@ -1019,7 +1019,7 @@ select option{background:#0d180d;color:var(--t1);}
       <span class="mi material-icons-round">add_circle_outline</span> Add Product
     </button>
 
-    <div id="qinv-count-bar" style="display:flex;align-items:center;justify-content:space-between;background:#0d180d;border:1px solid rgba(251,54,64,.25);border-radius:10px;padding:10px 14px;margin:10px 0;">
+    <div id="qinv-count-bar" style="display:flex;align-items:center;justify-content:space-between;background:#0C1B30;border:1px solid rgba(30,136,229,.25);border-radius:10px;padding:10px 14px;margin:10px 0;">
       <div style="display:flex;align-items:center;gap:8px;">
         <span class="mi material-icons-round" style="color:var(--p);font-size:18px">inventory_2</span>
         <span style="font-size:12px;color:var(--t2);font-weight:600">Number of Products</span>
@@ -1048,8 +1048,8 @@ select option{background:#0d180d;color:var(--t1);}
     <hr class="divhr">
     <div id="qdetail-body"></div>
     <button class="btn btnp mt8" onclick="dlQPDF()"><span class="mi material-icons-round">picture_as_pdf</span>Download PDF</button>
-    <button class="btn" style="background:#0f1a0f;color:var(--t1);margin-top:10px" onclick="shareQPDF()"><span class="mi material-icons-round">share</span>Share PDF</button>
-    <button class="btn" style="background:#0f1a0f;color:var(--t1);margin-top:10px" onclick="doEditQInv()"><span class="mi material-icons-round">edit</span>Edit Invoice</button>
+    <button class="btn" style="background:#0E1B33;color:var(--t1);margin-top:10px" onclick="shareQPDF()"><span class="mi material-icons-round">share</span>Share PDF</button>
+    <button class="btn" style="background:#0E1B33;color:var(--t1);margin-top:10px" onclick="doEditQInv()"><span class="mi material-icons-round">edit</span>Edit Invoice</button>
     <button class="btn btno mt8" onclick="doDelQInv()"><span class="mi material-icons-round">delete</span>Delete Invoice</button>
   </div>
 </div>
@@ -1063,7 +1063,7 @@ select option{background:#0d180d;color:var(--t1);}
     <div id="detail-body"></div>
     <div style="font-size:11px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.5px;margin-bottom:10px">Choose PDF Template</div>
     <div class="tpl-grid" style="display:none" id="detail-tpl-hidden">
-      <div class="tpl-card on" onclick="selTpl('classic',this)"><div class="tpl-prev" style="background:linear-gradient(135deg,#FB3640,#d42b34)">CLASSIC</div><span>Classic</span><small>Mariyam Style</small></div>
+      <div class="tpl-card on" onclick="selTpl('classic',this)"><div class="tpl-prev" style="background:linear-gradient(135deg,#1E88E5,#1565C0)">CLASSIC</div><span>Classic</span><small>Mariyam Style</small></div>
       <div class="tpl-card" onclick="selTpl('modern',this)"><div class="tpl-prev" style="background:linear-gradient(135deg,#1a2e1a,#2d4a2d)">MODERN</div><span>Modern</span><small>Green style</small></div>
       <div class="tpl-card" onclick="selTpl('bold',this)"><div class="tpl-prev" style="background:linear-gradient(135deg,#BF360C,#FF6D00)">BOLD</div><span>Bold</span><small>Orange accent</small></div>
       <div class="tpl-card" onclick="selTpl('minimal',this)"><div class="tpl-prev" style="background:linear-gradient(135deg,#37474F,#607D8B)">MINIMAL</div><span>Minimal</span><small>Black &amp; white</small></div>
@@ -1072,7 +1072,7 @@ select option{background:#0d180d;color:var(--t1);}
       <div class="tpl-card" onclick="selTpl('outline',this)"><div class="tpl-prev" style="background:#fff;border:2px solid #000;color:#000;font-weight:900">OUTLINE</div><span>Outline</span><small>B&amp;W No Fill</small></div>
     </div>
     <button class="btn btnp mt8" onclick="openPDFPreview()"><span class="mi material-icons-round">visibility</span>Preview &amp; Share PDF</button>
-    <button class="btn" style="background:#0f1a0f;color:var(--t1);margin-top:10px" onclick="doEditInv()"><span class="mi material-icons-round">edit</span>Edit Invoice</button>
+    <button class="btn" style="background:#0E1B33;color:var(--t1);margin-top:10px" onclick="doEditInv()"><span class="mi material-icons-round">edit</span>Edit Invoice</button>
     <button class="btn btno mt8" onclick="doDelInv()"><span class="mi material-icons-round">delete</span>Delete Invoice</button>
   </div>
 </div>
@@ -1097,7 +1097,7 @@ select option{background:#0d180d;color:var(--t1);}
     <div style="margin-top:4px">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:8px">
         <span style="font-size:11px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.5px">📍 Branch Addresses</span>
-        <button onclick="addBranchField()" style="border:none;background:rgba(251,54,64,.1);color:var(--p);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer">+ Add Branch</button>
+        <button onclick="addBranchField()" style="border:none;background:rgba(30,136,229,.1);color:var(--p);border-radius:8px;padding:5px 10px;font-size:11px;font-weight:600;font-family:inherit;cursor:pointer">+ Add Branch</button>
       </div>
       <div id="branch-list"></div>
     </div>
@@ -1173,7 +1173,7 @@ select option{background:#0d180d;color:var(--t1);}
       <p style="font-size:10px;color:var(--t3);margin-top:4px">PNG recommended (transparent background)</p>
     </div>
     <input type="file" id="logo-inp" accept="image/*" style="display:none" onchange="handleLogo(event)">
-    <div style="background:rgba(251,54,64,.07);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--p);margin:10px 0">
+    <div style="background:rgba(30,136,229,.07);border-radius:8px;padding:10px 12px;font-size:11px;color:var(--p);margin:10px 0">
       💡 Best size: 200×60px, PNG with transparent background
     </div>
     <button class="btn btnp" onclick="saveLogo()"><span class="mi material-icons-round">save</span>Save Logo</button>
@@ -1265,7 +1265,7 @@ select option{background:#0d180d;color:var(--t1);}
   <hr class="divhr">
   <div id="vehd-body"></div>
   <div style="display:grid;grid-template-columns:1fr 1fr;gap:10px;margin-top:12px">
-    <button class="btn" style="background:#0f1a0f;color:var(--t1)" onclick="editCurrVeh()"><span class="mi material-icons-round">edit</span>Edit</button>
+    <button class="btn" style="background:#0E1B33;color:var(--t1)" onclick="editCurrVeh()"><span class="mi material-icons-round">edit</span>Edit</button>
     <button class="btn btno" onclick="delCurrVeh()"><span class="mi material-icons-round">delete</span>Delete</button>
   </div>
 </div></div>
@@ -1359,7 +1359,7 @@ select option{background:#0d180d;color:var(--t1);}
       </div>
       <div id="pdf-import-details" style="background:var(--card);border-radius:10px;padding:13px;margin-bottom:14px;font-size:12px;line-height:2;color:var(--t1)"></div>
       <button class="btn btnp" onclick="openImportedInvoice()"><span class="mi material-icons-round">edit</span>Open in Editor</button>
-      <button class="btn" style="background:#0f1a0f;color:var(--t1);margin-top:10px" onclick="cls('ovpdfimport')"><span class="mi material-icons-round">close</span>Cancel</button>
+      <button class="btn" style="background:#0E1B33;color:var(--t1);margin-top:10px" onclick="cls('ovpdfimport')"><span class="mi material-icons-round">close</span>Cancel</button>
     </div>
     <div id="pdf-import-error" style="display:none">
       <div style="background:#1a0a0a;border-radius:10px;padding:14px;margin-bottom:14px;font-size:13px;color:var(--err);text-align:center" id="pdf-import-errmsg"></div>
@@ -1378,7 +1378,7 @@ select option{background:#0d180d;color:var(--t1);}
     <div style="flex-shrink:0;padding:0 0 10px">
       <div style="font-size:11px;font-weight:700;color:var(--p);text-transform:uppercase;letter-spacing:.5px;margin-bottom:8px">Template</div>
       <div class="tpl-grid" id="prev-tpl-grid">
-        <div class="tpl-card on" onclick="prevSelTpl('classic',this)"><div class="tpl-prev" style="background:linear-gradient(135deg,#FB3640,#d42b34)">CLASSIC</div><span>Classic</span></div>
+        <div class="tpl-card on" onclick="prevSelTpl('classic',this)"><div class="tpl-prev" style="background:linear-gradient(135deg,#1E88E5,#1565C0)">CLASSIC</div><span>Classic</span></div>
         <div class="tpl-card" onclick="prevSelTpl('modern',this)"><div class="tpl-prev" style="background:linear-gradient(135deg,#1a2e1a,#2d4a2d)">MODERN</div><span>Modern</span></div>
         <div class="tpl-card" onclick="prevSelTpl('bold',this)"><div class="tpl-prev" style="background:linear-gradient(135deg,#BF360C,#FF6D00)">BOLD</div><span>Bold</span></div>
         <div class="tpl-card" onclick="prevSelTpl('minimal',this)"><div class="tpl-prev" style="background:linear-gradient(135deg,#37474F,#607D8B)">MINIMAL</div><span>Minimal</span></div>
@@ -1397,7 +1397,7 @@ select option{background:#0d180d;color:var(--t1);}
       <button class="share-btn share-wa" onclick="previewShareWA()"><span class="mi material-icons-round">share</span>WhatsApp</button>
       <button class="share-btn share-dl" onclick="previewDownload()"><span class="mi material-icons-round">download</span>Download</button>
     </div>
-    <button class="btn" style="background:#0f1a0f;color:var(--t1);margin-top:10px" onclick="doEditInv()"><span class="mi material-icons-round">edit</span>Edit Invoice</button>
+    <button class="btn" style="background:#0E1B33;color:var(--t1);margin-top:10px" onclick="doEditInv()"><span class="mi material-icons-round">edit</span>Edit Invoice</button>
   </div>
 </div>
 
@@ -1407,7 +1407,7 @@ select option{background:#0d180d;color:var(--t1);}
     <div class="shdl"></div>
     <div class="shhdr"><h3>Team Members</h3><button class="shcls" onclick="cls('ovteam')"><span class="mi material-icons-round">close</span></button></div>
     <hr class="divhr">
-    <div id="team-owner-info" style="background:#0f1a0f;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">
+    <div id="team-owner-info" style="background:#0E1B33;border-radius:10px;padding:12px 14px;margin-bottom:14px;font-size:13px">
       <div style="font-weight:600;color:var(--p)" id="team-owner-name">Loading…</div>
       <div style="color:var(--t2);font-size:11px" id="team-owner-email"></div>
       <div style="margin-top:4px"><span style="background:var(--p);color:#fff;font-size:10px;font-weight:700;padding:2px 8px;border-radius:20px">OWNER</span></div>
@@ -1530,7 +1530,7 @@ function doForgotPw(){
   if(!em){showAerr('Enter your email address first, then tap Forgot Password.');return;}
   FB.sendPasswordResetEmail(em)
     .then(function(){
-      g('aerr').style.background='#0f1a0f';
+      g('aerr').style.background='#0E1B33';
       g('aerr').style.color='#43A047';
       g('aerr').textContent='✅ Reset email sent to '+em+'. Check your inbox (and spam folder).';
       g('aerr').style.display='block';
@@ -2000,7 +2000,7 @@ function fillParty(pid){
       if(addrField && addrField.parentNode) addrField.parentNode.insertBefore(branchWrap,addrField);
     }
     branchWrap.innerHTML='<label style="font-size:10px;font-weight:700;letter-spacing:.4px;color:var(--t2);text-transform:uppercase;display:block;margin-bottom:4px">Select Branch</label>'
-      +'<select onchange="selBranchAddr(this)" style="width:100%;padding:10px 13px;border:1.5px solid var(--bdr);border-radius:10px;font-size:13px;font-family:inherit;background:#0d180d;color:var(--t1)">'
+      +'<select onchange="selBranchAddr(this)" style="width:100%;padding:10px 13px;border:1.5px solid var(--bdr);border-radius:10px;font-size:13px;font-family:inherit;background:#0C1B30;color:var(--t1)">'
       +allAddrs.map(function(b,i){
         return '<option value="'+i+'">'+b.name+(b.address?' — '+b.address.slice(0,40):'')+'</option>';
       }).join('')
@@ -2428,10 +2428,10 @@ function addBranchField(name, addr){
   div.id = 'branch-'+idx;
   div.style.cssText = 'background:var(--div);border-radius:10px;padding:10px 12px;margin-bottom:8px;position:relative';
   div.innerHTML = '<div style="display:flex;gap:8px;margin-bottom:6px">'
-    +'<input id="bname-'+idx+'" placeholder="Branch name (e.g. Tuticorin Branch)" value="'+(name||'')+'" style="flex:1;padding:8px 10px;border:1.5px solid var(--bdr);border-radius:8px;font-size:12px;background:#0d180d;color:var(--t1);font-family:inherit"/>'
+    +'<input id="bname-'+idx+'" placeholder="Branch name (e.g. Tuticorin Branch)" value="'+(name||'')+'" style="flex:1;padding:8px 10px;border:1.5px solid var(--bdr);border-radius:8px;font-size:12px;background:#0C1B30;color:var(--t1);font-family:inherit"/>'
     +'<button onclick="removeBranch('+idx+')" style="border:none;background:rgba(255,68,68,.15);color:var(--err);border-radius:8px;padding:0 10px;font-size:18px;cursor:pointer;flex-shrink:0">×</button>'
     +'</div>'
-    +'<textarea id="baddr-'+idx+'" placeholder="Branch full address..." style="width:100%;padding:8px 10px;border:1.5px solid var(--bdr);border-radius:8px;font-size:12px;background:#0d180d;color:var(--t1);font-family:inherit;min-height:44px;resize:vertical">'+(addr||'')+'</textarea>';
+    +'<textarea id="baddr-'+idx+'" placeholder="Branch full address..." style="width:100%;padding:8px 10px;border:1.5px solid var(--bdr);border-radius:8px;font-size:12px;background:#0C1B30;color:var(--t1);font-family:inherit;min-height:44px;resize:vertical">'+(addr||'')+'</textarea>';
   bl.appendChild(div);
 }
 function removeBranch(idx){
@@ -2706,7 +2706,7 @@ function renderI(){
   el.innerHTML=ls.map(function(inv,idx){
     var iid=inv.id;
     return '<div class="lc anim-fade-up" style="animation-delay:'+(idx*0.04)+'s" onclick="openDetail(_inv.find(function(x){return x.id===\''+iid+'\'}))">'
-      +'<div class="lcic" style="background:rgba(251,54,64,.10)"><span class="mi material-icons-round" style="color:var(--p)">receipt</span></div>'
+      +'<div class="lcic" style="background:rgba(30,136,229,.10)"><span class="mi material-icons-round" style="color:var(--p)">receipt</span></div>'
       +'<div class="lci"><div class="lct">'+inv.invoiceNumber+'</div>'
       +'<div class="lcs">'+(inv.partyName||'—')+' · '+fd(inv.invoiceDate)+'</div></div>'
       +'<div class="lcr"><div class="lca">'+fmt(inv.totalAmount)+'</div>'
@@ -2730,7 +2730,7 @@ function renderPa(){
   el.innerHTML=ls.map(function(p,idx){
     var pid=p.id;
     return '<div class="lc anim-fade-up" style="animation-delay:'+(idx*0.04)+'s" onclick="openPaF(_par.find(function(x){return x.id===\''+pid+'\'}))">'
-      +'<div style="width:44px;height:44px;border-radius:50%;background:rgba(251,54,64,.10);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--p);flex-shrink:0">'+((p.name||'?')[0].toUpperCase())+'</div>'
+      +'<div style="width:44px;height:44px;border-radius:50%;background:rgba(30,136,229,.10);display:flex;align-items:center;justify-content:center;font-size:18px;font-weight:700;color:var(--p);flex-shrink:0">'+((p.name||'?')[0].toUpperCase())+'</div>'
       +'<div class="lci"><div class="lct">'+p.name+'</div><div class="lcs">'+(p.phone||'')+(p.gstNumber?' · GST: '+p.gstNumber:'')+'</div></div>'
       +'<button class="dbtn" onclick="event.stopPropagation();delPa(\''+pid+'\')" ><span class="mi material-icons-round">delete</span></button>'
       +'</div>';
@@ -2757,7 +2757,7 @@ function renderPr(){
     var pid=p.id;
     var low=(p.currentStock||0)<=(p.reorderLevel||0)&&(p.reorderLevel||0)>0;
     return '<div class="lc anim-fade-up" style="animation-delay:'+(idx*0.04)+'s" onclick="openPrF(_pro.find(function(x){return x.id===\''+pid+'\'}))">'
-      +'<div class="lcic" style="background:'+(low?'rgba(229,57,53,.08)':'rgba(251,54,64,.10)')+'"><span class="mi material-icons-round" style="color:'+(low?'var(--err)':'var(--p)')+'">inventory_2</span></div>'
+      +'<div class="lcic" style="background:'+(low?'rgba(229,57,53,.08)':'rgba(30,136,229,.10)')+'"><span class="mi material-icons-round" style="color:'+(low?'var(--err)':'var(--p)')+'">inventory_2</span></div>'
       +'<div class="lci"><div class="lct">'+p.name+'</div>'
       +'<div class="lcs">HSN: '+(p.hsnCode||'—')+' · Sell: '+fmt(p.sellingPrice)+' · Stock: '+(p.currentStock||0)+' '+(p.unit||'')+'</div></div>'
       +'<button class="dbtn" onclick="event.stopPropagation();delPr(\''+pid+'\')" ><span class="mi material-icons-round">delete</span></button>'
@@ -2968,7 +2968,7 @@ renderI = function(){
     var iid = inv.id;
     var icon = t==='quotation' ? 'description' : 'receipt';
     return '<div class="lc" onclick="openDetail(_inv.find(function(x){return x.id===\''+iid+'\'}))">'
-      +'<div class="lcic" style="background:rgba(251,54,64,.10)"><span class="mi material-icons-round" style="color:var(--p)">'+icon+'</span></div>'
+      +'<div class="lcic" style="background:rgba(30,136,229,.10)"><span class="mi material-icons-round" style="color:var(--p)">'+icon+'</span></div>'
       +'<div class="lci"><div class="lct">'+inv.invoiceNumber+'</div>'
       +'<div class="lcs">'+(inv.partyName||'—')+' · '+fd(inv.invoiceDate)+(inv.vehicleNo?' · 🚛'+inv.vehicleNo:'')+'</div></div>'
       +'<div class="lcr"><div class="lca">'+fmt(inv.totalAmount)+'</div>'
@@ -3171,7 +3171,7 @@ function renderPay(){
   el.innerHTML=ls.map(function(p,idx){
     var isIn=p.direction==='received';
     return '<div class="lc anim-fade-up" style="animation-delay:'+(idx*0.04)+'s" onclick="openPayF(_pay.find(function(x){return x.id===\''+p.id+'\'}))">'
-      +'<div class="lcic" style="background:'+(isIn?'#0f1a0f':'#1a0a0a')+'"><span class="mi material-icons-round" style="color:'+(isIn?'var(--ok)':'var(--err)')+'">'+( isIn?'arrow_circle_down':'arrow_circle_up')+'</span></div>'
+      +'<div class="lcic" style="background:'+(isIn?'#0E1B33':'#1a0a0a')+'"><span class="mi material-icons-round" style="color:'+(isIn?'var(--ok)':'var(--err)')+'">'+( isIn?'arrow_circle_down':'arrow_circle_up')+'</span></div>'
       +'<div class="lci"><div class="lct">'+p.partyName+'</div>'
       +'<div class="lcs">'+fd(p.date)+' · '+p.mode+(p.reference?' · Ref: '+p.reference:'')+'</div></div>'
       +'<div class="lcr"><div style="font-size:14px;font-weight:700;color:'+(isIn?'var(--ok)':'var(--err)')+'">'+fmt(p.amount)+'</div></div>'
@@ -3950,7 +3950,7 @@ function renderTeamList(){
     el.innerHTML='<div class="em" style="padding:16px 0"><span class="mi material-icons-round" style="font-size:32px;color:var(--t3)">group</span><p style="color:var(--t2);font-size:13px;margin-top:6px">No team members yet</p></div>';
     return;
   }
-  var roleColors={staff:'#FB3640',manager:'#9C27B0',accountant:'#FF9800'};
+  var roleColors={staff:'#1E88E5',manager:'#9C27B0',accountant:'#FF9800'};
   el.innerHTML=_teamMembers.map(function(m){
     var av=((m.name||m.email||'?')[0]).toUpperCase();
     var rb=roleColors[m.role]||'#607D8B';
@@ -4109,8 +4109,8 @@ function openFYSheet(){
   el.innerHTML = years.map(function(fy){
     var isActive = fy.code === activeFY;
     var invCount = _inv.filter(function(i){ return (i.fy||'') === fy.code || (i.invoiceNumber||'').includes(fy.code); }).length;
-    return '<div class="lc" onclick="switchFY(\''+fy.code+'\')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;'+(isActive?'background:#0f1a0f;border-radius:10px;':'') +'margin-bottom:6px">'
-      +'<div style="width:42px;height:42px;border-radius:10px;background:'+(isActive?'#43A047':'#0f1a0f')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
+    return '<div class="lc" onclick="switchFY(\''+fy.code+'\')" style="display:flex;align-items:center;gap:12px;padding:12px 14px;'+(isActive?'background:#0E1B33;border-radius:10px;':'') +'margin-bottom:6px">'
+      +'<div style="width:42px;height:42px;border-radius:10px;background:'+(isActive?'#43A047':'#0E1B33')+';display:flex;align-items:center;justify-content:center;flex-shrink:0">'
       +'<span class="mi material-icons-round" style="color:'+(isActive?'#fff':'var(--p)')+'">calendar_today</span></div>'
       +'<div style="flex:1">'
       +'<div style="font-weight:600;font-size:13px">FY '+fy.label+(isActive?' <span style="background:#43A047;color:#fff;font-size:10px;padding:1px 6px;border-radius:20px;font-weight:700">ACTIVE</span>':'')+'</div>'
@@ -4298,7 +4298,7 @@ renderI = function(){
       ? '<span class="bg" style="background:#FF9800;color:#fff">DRAFT MSG</span>'
       : '<span class="bg bg-'+(inv.status||'draft')+'">'+(inv.status||'draft').toUpperCase()+'</span>';
     return '<div class="lc anim-fade-up" style="animation-delay:'+(idx*0.04)+'s;'+cardBg+'" onclick="openDetail(_inv.find(function(x){return x.id===\''+iid+'\'}))">'
-      +'<div class="lcic" style="background:'+(isDraftMsg?'rgba(255,152,0,.12)':'rgba(251,54,64,.10)')+'"><span class="mi material-icons-round" style="color:'+(isDraftMsg?'#FF9800':'var(--p)')+'">'+icon+'</span></div>'
+      +'<div class="lcic" style="background:'+(isDraftMsg?'rgba(255,152,0,.12)':'rgba(30,136,229,.10)')+'"><span class="mi material-icons-round" style="color:'+(isDraftMsg?'#FF9800':'var(--p)')+'">'+icon+'</span></div>'
       +'<div class="lci"><div class="lct">'+inv.invoiceNumber+'</div>'
       +'<div class="lcs">'+(inv.partyName||'—')+' · '+fd(inv.invoiceDate)+(inv.vehicleNo?' · 🚛'+inv.vehicleNo:'')+'</div></div>'
       +'<div class="lcr"><div class="lca">'+fmt(inv.totalAmount)+'</div>'+badge+'</div>'
@@ -4434,7 +4434,7 @@ openInvF = function(inv, type){
   if(saveBtn && !g('inv-form-mode-wrap')){
     var wrap = document.createElement('div');
     wrap.id = 'inv-form-mode-wrap';
-    wrap.style.cssText = 'display:flex;gap:0;background:#0f1a0f;border-radius:10px;padding:3px;margin-bottom:12px';
+    wrap.style.cssText = 'display:flex;gap:0;background:#0E1B33;border-radius:10px;padding:3px;margin-bottom:12px';
     wrap.innerHTML = '<button id="iform-official" onclick="setFormMode(\'official\',this)" style="flex:1;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;background:var(--p);color:#fff;transition:all .2s"><span class=\"mi material-icons-round\" style=\"font-size:14px;vertical-align:-2px\">verified</span> Official Invoice</button>'
       +'<button id="iform-draft" onclick="setFormMode(\'draft\',this)" style="flex:1;border:none;border-radius:8px;padding:8px;font-size:12px;font-weight:600;font-family:inherit;cursor:pointer;background:transparent;color:var(--p);transition:all .2s"><span class=\"mi material-icons-round\" style=\"font-size:14px;vertical-align:-2px\">edit_note</span> Draft Message</button>';
     saveBtn.parentNode.insertBefore(wrap, saveBtn);
@@ -4937,7 +4937,7 @@ function swQTab(el){
     <div class="shdl"></div>
     <div class="shhdr"><h3>Financial Year</h3><button class="shcls" onclick="cls('ovfy')"><span class="mi material-icons-round">close</span></button></div>
     <hr class="divhr">
-    <div id="fy-current-info" style="background:#0f1a0f;border-radius:10px;padding:12px 14px;margin-bottom:16px">
+    <div id="fy-current-info" style="background:#0E1B33;border-radius:10px;padding:12px 14px;margin-bottom:16px">
       <div style="font-size:11px;color:var(--t2);margin-bottom:2px">ACTIVE FINANCIAL YEAR</div>
       <div style="font-size:18px;font-weight:700;color:#2E7D32" id="fy-display">FY 2025-26</div>
       <div style="font-size:11px;color:var(--t2);margin-top:2px">Apr 1, 2025 — Mar 31, 2026</div>
@@ -4955,20 +4955,20 @@ function swQTab(el){
 <style>
 #pwa-banner, #pwa-banner-ios {
   display:none; position:fixed; bottom:80px; left:12px; right:12px; z-index:9998;
-  background:linear-gradient(135deg,#000F08,#1e0808);
-  border:1px solid rgba(251,54,64,.4);
+  background:linear-gradient(135deg,#081B30,#122545);
+  border:1px solid rgba(30,136,229,.4);
   border-radius:16px; padding:14px 16px;
   box-shadow:0 8px 32px rgba(0,0,0,.6);
   align-items:center; gap:12px;
   animation: slideUp .4s ease;
 }
 @keyframes slideUp { from{transform:translateY(20px);opacity:0} to{transform:translateY(0);opacity:1} }
-.pwa-icon { width:48px; height:48px; border-radius:12px; background:#FB3640; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:24px; font-weight:900; color:#000F08; font-family:Arial; }
+.pwa-icon { width:48px; height:48px; border-radius:12px; background:#1E88E5; display:flex; align-items:center; justify-content:center; flex-shrink:0; font-size:24px; font-weight:900; color:#081B30; font-family:Arial; }
 .pwa-text { flex:1; }
 .pwa-text strong { display:block; color:#f0ede8; font-size:13px; font-weight:700; }
-.pwa-text small { color:#8a9e8a; font-size:11px; }
+.pwa-text small { color:#8FA3C2; font-size:11px; }
 .pwa-btn { background:var(--p); color:#fff; border:none; border-radius:10px; padding:9px 16px; font-size:12px; font-weight:700; font-family:inherit; cursor:pointer; flex-shrink:0; }
-.pwa-close { background:none; border:none; color:#8a9e8a; cursor:pointer; padding:4px; font-size:20px; flex-shrink:0; line-height:1; }
+.pwa-close { background:none; border:none; color:#8FA3C2; cursor:pointer; padding:4px; font-size:20px; flex-shrink:0; line-height:1; }
 </style>
 
 <!-- Android/Desktop Install Banner -->
