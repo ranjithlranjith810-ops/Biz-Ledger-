@@ -4845,6 +4845,33 @@ function fillQParty(pid){
     if(s.exists()) _qPartyRates = s.val() || {};
   }).catch(function(e){ console.error('partyRates load:', e); });
 }
+// Previous rate for the selected party + product.
+// Priority: saved Quick Invoice rate → latest Official/Draft invoice rate → null.
+function getQPrevRate(partyId, productName){
+  if(!partyId || !productName) return null;
+  var key = (productName||'').trim().toLowerCase();
+  if(!key) return null;
+  if(_qPartyRates && _qPartyRates[key] && _qPartyRates[key].rate != null){
+    return parseFloat(_qPartyRates[key].rate);
+  }
+  // Fallback — latest historical rate from Official/Draft invoices for the same party+product
+  var party = (_par||[]).find(function(x){ return x.id===partyId; });
+  var pName = party ? (party.name||'').trim().toLowerCase() : '';
+  var best = null, bestDate = '';
+  (_inv||[]).forEach(function(inv){
+    var invParty = (inv.partyName||inv.receiverName||inv.receiver||'').trim().toLowerCase();
+    if(invParty !== pName && inv.partyId !== partyId) return;
+    (inv.items||[]).forEach(function(it){
+      var itName = (it.desc||it.name||it.productName||'').trim().toLowerCase();
+      if(itName !== key) return;
+      var r = parseFloat(it.price != null ? it.price : it.rate != null ? it.rate : it.unitPrice);
+      if(!(r > 0)) return;
+      var d = inv.invoiceDate || inv.date || '';
+      if(d >= bestDate){ best = r; bestDate = d; }
+    });
+  });
+  return best != null ? best : null;
+}
 function resetQParty(){
   _qPartyId = null; _qPartyRates = {};
 }
@@ -4880,9 +4907,9 @@ function buildQItemRows(){
     // Rate memory — when the typed product name matches a saved party rate, auto-fill the rate
     if(nm && price){
       nm.addEventListener('input', function(){
-        if(!_qPartyId || !_qPartyRates) return;
-        var rec = _qPartyRates[(nm.value||'').trim().toLowerCase()];
-        if(rec && rec.rate != null && !price.value) price.value = rec.rate;
+        if(!_qPartyId) return;
+        var prev = getQPrevRate(_qPartyId, nm.value);
+        if(prev != null && !price.value) price.value = prev;
       });
     }
     // Product-name autocomplete — pulls from existing Inventory products (name only, no price/HSN copied)
@@ -4909,9 +4936,9 @@ function fillQProdItem(idx, pid){
   if(!p) return;
   if(g('qiname-'+idx)) g('qiname-'+idx).value = p.name || '';
   // Rate memory — if this party has a saved rate for the product, prefill it
-  if(_qPartyId && _qPartyRates){
-    var rec = _qPartyRates[(p.name||'').trim().toLowerCase()];
-    if(rec && rec.rate != null && g('qiprice-'+idx) && !g('qiprice-'+idx).value) g('qiprice-'+idx).value = rec.rate;
+  if(_qPartyId){
+    var prev = getQPrevRate(_qPartyId, p.name);
+    if(prev != null && g('qiprice-'+idx) && !g('qiprice-'+idx).value) g('qiprice-'+idx).value = prev;
   }
   var ps = g('qprod-sugg-'+idx); if(ps) ps.style.display='none';
   syncQItems(); recalcQTotals();
@@ -5181,18 +5208,20 @@ function buildQPDF(inv){
   row(rx, rv, ly, 'Payment Terms :', inv.paymentTerms);
 
   // Products table
-  var items = inv.items || [];
+  var items = (inv.items||[]).filter(function(it){
+    return it && it.type!=='old_balance' && it.type!=='balance' && !it.isOldBalance;
+  });
   var tdata = items.map(function(it, i){ return [(i+1).toString(), it.name||'', (it.qty||0).toString(), fmtN(it.rate||0), fmtN(it.amount||0)]; });
-  // Old Balance row — appended as the last line item
+  // Old Balance row — financial adjustment only: no qty, no rate, no product count
   if(inv.oldBalance && inv.oldBalance.amount){
-    tdata.push([(tdata.length+1).toString(), 'Old Balance'+(inv.oldBalance.date?' ('+fd(inv.oldBalance.date)+')':''), '1', fmtN(inv.oldBalance.amount), fmtN(inv.oldBalance.amount)]);
+    tdata.push(['', 'Old Balance'+(inv.oldBalance.date?' ('+fd(inv.oldBalance.date)+')':''), '—', '—', fmtN(inv.oldBalance.amount)]);
   }
 
   doc.autoTable({
     startY: 82,
     head: [['#','Product / Item','Qty','Rate (₹)','Amount (₹)']],
     body: tdata,
-    foot: [[{content:'No. of Products: '+(inv.productCount||items.length), colSpan:3, styles:{halign:'left', fontStyle:'bold', fontSize:8}},
+    foot: [[{content:'No. of Products: '+items.length, colSpan:3, styles:{halign:'left', fontStyle:'bold', fontSize:8}},
       {content:'TOTAL', styles:{halign:'right', fontStyle:'bold', fontSize:9}},
       {content: fmtN(inv.totalAmount||0), styles:{halign:'right', fontStyle:'bold', fontSize:9}}]],
     theme:'grid',
