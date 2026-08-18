@@ -1,4 +1,4 @@
-const CACHE = 'bizledger-v7';
+const CACHE = 'bizledger-v8';
 const ASSETS = [
   '/',
   '/index.html',

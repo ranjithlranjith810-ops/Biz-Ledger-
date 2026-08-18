@@ -30,8 +30,9 @@
 <style>
 :root{--p:#1E88E5;--pd:#1565C0;--sec:#64B5F6;--ok:#43A047;--warn:#FFB300;--err:#ff4444;--bg:#0A1626;--card:#0E1B33;--t1:#f0ede8;--t2:#8FA3C2;--t3:#3D5070;--bdr:#1C2E4A;--div:#152238;--sh:0 2px 12px rgba(0,0,0,.4);}
 *{margin:0;padding:0;box-sizing:border-box;-webkit-tap-highlight-color:transparent;}
-html,body{height:100%;overflow-x:hidden;}
-body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(--t1);}
+html,body{height:100%;overflow-x:hidden;overscroll-behavior-y:none;}
+html{overscroll-behavior-x:none;}
+body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(--t1);overscroll-behavior:none;}
 /* ══════════════════════════════
    SPLASH SCREEN — Red/Black Theme
    ══════════════════════════════ */
@@ -178,7 +179,7 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 .chdr p{color:rgba(255,255,255,.68);font-size:12px;}
 .cbdy{background:#0E1B33;border-radius:28px 28px 0 0;padding:22px 20px 48px;min-height:72vh;}
 /* APP */
-#APP{display:none;flex-direction:column;min-height:100vh;}
+#APP{display:none;flex-direction:column;min-height:100vh;overscroll-behavior-y:none;overscroll-behavior-x:none;}
 .page{display:none;padding-bottom:72px;}
 .page.on{display:block;animation:pi .18s ease;}
 @keyframes pi{from{opacity:0;transform:translateY(5px)}to{opacity:1}}
@@ -271,7 +272,7 @@ body{font-family:'Poppins',system-ui,sans-serif;background:var(--bg);color:var(-
 .ov{position:fixed;inset:0;background:rgba(0,0,0,.42);z-index:200;display:none;align-items:flex-end;}
 .ov.on{display:flex;animation:oa .2s;}
 @keyframes oa{from{opacity:0}to{opacity:1}}
-.shwrap{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-height:94vh;overflow-y:auto;padding:0 16px 40px;}
+.shwrap{background:var(--card);border-radius:20px 20px 0 0;width:100%;max-height:94vh;overflow-y:auto;padding:0 16px 40px;overscroll-behavior-y:contain;-webkit-overflow-scrolling:touch;}
 .shdl{width:38px;height:4px;background:#DDD;border-radius:2px;margin:12px auto 0;}
 .shhdr{display:flex;align-items:center;justify-content:space-between;padding:10px 0 8px;}
 .shhdr h3{font-size:15px;font-weight:700;}
@@ -1524,7 +1525,7 @@ function n2w(n){
 function hideSpl(){var s=g('S');s.style.transition='opacity .35s';s.style.opacity='0';setTimeout(function(){s.style.display='none';},400);}
 function showAuth(){hideSpl();g('A').style.display='block';g('C').style.display='none';g('APP').style.display='none';}
 function showSetup(){hideSpl();g('A').style.display='none';g('C').style.display='block';g('APP').style.display='none';}
-function showApp(){hideSpl();g('A').style.display='none';g('C').style.display='none';g('APP').style.display='flex';loadSign();loadLogo();loadIset();refreshMC();loadData();}
+function showApp(){hideSpl();g('A').style.display='none';g('C').style.display='none';g('APP').style.display='flex';initBLHistory();loadSign();loadLogo();loadIset();refreshMC();loadData();}
 
 // ═══════════════════════════ AUTH ═══════════════════════════
 // Auth is handled by the multi-user system at the bottom of this file.
@@ -1734,11 +1735,25 @@ function loadData(){
 }
 
 // ═══════════════════════════ NAVIGATION ═══════════════════════════
-function swPg(pg,el){
+var _currentPage='d';
+var _historyApplying=false;
+
+// Initialize a BizLedger root history state once at startup
+function initBLHistory(){
+  var current=history.state;
+  if(!current || current.bl!==true){
+    history.replaceState({bl:true,type:'page',page:'d'},'',location.href);
+  }
+  _currentPage='d';
+}
+
+function applyPage(pg){
+  _currentPage=pg;
   document.querySelectorAll('.page').forEach(function(p){p.classList.remove('on');});
   document.querySelectorAll('.ni').forEach(function(n){n.classList.remove('on');});
   var page=g('pg-'+pg);if(page)page.classList.add('on');
-  if(el)el.classList.add('on');
+  var nav=document.querySelector('.ni[onclick*="swPg(\''+pg+'\',"]');
+  if(nav)nav.classList.add('on');
   // Re-render the target page so data always shows up on switch
   var renderMap={
     'd': function(){ renderD(); },
@@ -1751,16 +1766,49 @@ function swPg(pg,el){
   };
   if(renderMap[pg]) setTimeout(renderMap[pg], 0);
 }
-var _invoiceFormDirty = false;   // set true when any invoice field is edited, cleared on save/cancel
-function opn(id){
-  g(id).classList.add('on');document.body.style.overflow='hidden';
-  try{ history.pushState({blOverlay:id}, ''); }catch(e){}
+
+function swPg(pg,el){
+  if(!pg) return;
+  // Same page: do nothing
+  if(_currentPage===pg && !_historyApplying) return;
+  // Close an open overlay before changing pages
+  if(document.querySelector('.ov.on')) closeAllOverlaysDirect();
+  if(!_historyApplying){
+    history.pushState({bl:true,type:'page',page:pg},'',location.href);
+  }
+  applyPage(pg);
 }
-function cls(id){
-  var ov=g(id); if(ov) ov.classList.remove('on');
+
+function opn(id){
+  var el=g(id); if(!el) return;
+  el.classList.add('on'); document.body.style.overflow='hidden';
+  var state={bl:true,type:'overlay',page:_currentPage,overlay:id};
+  if(!_historyApplying) history.pushState(state,'',location.href);
+}
+
+function closeOverlayDirect(id){
+  var ov=g(id);
+  if(ov) ov.classList.remove('on');
   if(!document.querySelector('.ov.on')) document.body.style.overflow='';
   if(id==='ovinv'||id==='ovqinv') _invoiceFormDirty=false;
 }
+
+function closeAllOverlaysDirect(){
+  document.querySelectorAll('.ov.on').forEach(function(ov){ closeOverlayDirect(ov.id); });
+}
+
+function cls(id){
+  var ov=g(id);
+  if(!ov || !ov.classList.contains('on')) return;
+  // If this overlay owns the current history entry, go back so popstate performs the actual close
+  if(history.state && history.state.bl===true && history.state.type==='overlay' && history.state.overlay===id){
+    history.back();
+    return;
+  }
+  closeOverlayDirect(id);
+}
+
+var _invoiceFormDirty = false;   // set true when any invoice field is edited, cleared on save/cancel
 // Prevent accidental reload / data loss while an invoice form has unsaved edits
 window.addEventListener('beforeunload', function(e){
   if(_invoiceFormDirty){
@@ -1768,10 +1816,29 @@ window.addEventListener('beforeunload', function(e){
     e.returnValue='';
   }
 });
-// Hardware/gesture back closes the current overlay instead of leaving the app
+// Hardware/gesture/browser back — single source of truth for navigation
 window.addEventListener('popstate', function(e){
-  var ov=e.state && e.state.blOverlay;
-  if(ov && g(ov) && g(ov).classList.contains('on')) cls(ov);
+  var state=e.state;
+  _historyApplying=true;
+  if(state && state.bl===true){
+    if(state.type==='overlay'){
+      closeAllOverlaysDirect();
+      if(state.page && state.page!==_currentPage) applyPage(state.page);
+      var ov=g(state.overlay);
+      if(ov){ ov.classList.add('on'); document.body.style.overflow='hidden'; }
+    }else if(state.type==='page'){
+      closeAllOverlaysDirect();
+      applyPage(state.page || 'd');
+    }else{
+      closeAllOverlaysDirect();
+      applyPage('d');
+    }
+  }else{
+    // Reached the root/unknown browser state — keep the app on Home
+    closeAllOverlaysDirect();
+    applyPage('d');
+  }
+  _historyApplying=false;
 });
 // Mark the invoice form dirty whenever any field inside it is edited
 document.addEventListener('input', function(e){
@@ -1803,6 +1870,33 @@ document.addEventListener('DOMContentLoaded',function(){
   document.querySelectorAll('.shwrap').forEach(function(el){
     el.style.webkitOverflowScrolling = 'touch';
   });
+
+  // ── PULL-TO-REFRESH GUARD ──
+  // Blocks a downward drag only when the app is already at the very top,
+  // so the Chrome-style top-edge swipe never reloads the PWA. Normal
+  // vertical scrolling (and sheet scrolling) is left untouched.
+  var _ptrStartY = 0;
+  var _ptrTracking = false;
+  document.addEventListener('touchstart', function(e){
+    if(!e.touches || !e.touches.length) return;
+    _ptrStartY = e.touches[0].clientY;
+    _ptrTracking = true;
+  }, {passive:true});
+  document.addEventListener('touchmove', function(e){
+    if(!_ptrTracking || !e.touches || !e.touches.length) return;
+    var dy = e.touches[0].clientY - _ptrStartY;
+    if(dy <= 0) return;
+    var target = e.target;
+    if(!target || !target.closest) return;
+    // Inside a scrollable sheet that is scrolled down: allow it to scroll normally
+    var sheet = target.closest('.shwrap');
+    if(sheet && sheet.scrollTop > 0) return;
+    // Only suppress a downward pull when the document is at the very top
+    var se = document.scrollingElement || document.documentElement;
+    if(se.scrollTop <= 0) e.preventDefault();
+  }, {passive:false});
+  document.addEventListener('touchend', function(){ _ptrTracking = false; }, {passive:true});
+  document.addEventListener('touchcancel', function(){ _ptrTracking = false; }, {passive:true});
 });
 
 // ═══════════════════════════ INVOICE AUTO NUMBER ═══════════════════════════
@@ -3092,7 +3186,7 @@ function openVehDetail(vid){
   g('vehd-body').innerHTML = html;
   opn('ovvehd');
 }
-function editCurrVeh(){ cls('ovvehd'); openVehF(_currVeh); }
+function editCurrVeh(){ cls('ovvehd'); setTimeout(function(){ openVehF(_currVeh); }, 100); }
 function delCurrVeh(){
   if(!confirm('Delete vehicle '+(_currVeh?_currVeh.number:'')+'?')) return;
   DB.ref(ep()+'vehicles/'+_currVeh.id).remove().then(function(){
@@ -4576,7 +4670,8 @@ loadData = function(){
 
 // ── Convert a regular invoice OR quick invoice into a new Quick Invoice ──
 // Copies: party name, state, district, state code, vehicle number, payment terms
-// Does NOT copy: items, amounts, GST (Quick Invoice has its own items)
+// AND the product/items list (desc→name, qty→qty, price→rate, amount).
+// Uses the source invoice's historical price — never the current inventory price.
 function convertToQuickInv(inv){
   if(!inv){ toast('No invoice selected','r'); return; }
 
@@ -4584,52 +4679,87 @@ function convertToQuickInv(inv){
   cls('ovdetail');
   cls('ovqdetail');
 
-  // Open the Quick Invoice form fresh
-  openQInvF(null);
+  // Convert the source invoice items FIRST (this was the missing step).
+  var sourceItems = Array.isArray(inv.items) ? inv.items : [];
+  var convertedItems = sourceItems.map(function(it){
+    var qty = parseFloat(it.qty != null ? it.qty : it.quantity != null ? it.quantity : 0) || 0;
+    var rate = parseFloat(it.price != null ? it.price : it.rate != null ? it.rate : it.unitPrice != null ? it.unitPrice : 0) || 0;
+    var amount = parseFloat(it.amount);
+    if(!amount || amount <= 0) amount = qty * rate;
+    return {
+      name: (it.desc || it.name || it.productName || '').trim(),
+      qty: qty || 1,
+      rate: rate || 0,
+      amount: Math.round(amount * 100) / 100,
+      // Keep as optional metadata for future use — Quick Invoice stays GST-free
+      unit: it.unit || 'PCS',
+      hsn: it.hsn || it.hsnCode || ''
+    };
+  }).filter(function(it){ return it.name; });
 
-  // Wait for the form to render, then fill the fields
+  // Wait for the sheet-close history.back() to settle before opening the form,
+  // so the new overlay gets a clean history entry on top of the current page.
   setTimeout(function(){
-    // Invoice number — leave qino as-is, it will have the next auto-generated number
+    // Open the Quick Invoice form fresh
+    openQInvF(null);
 
-    // Date — use today's date
-    var today = new Date().toISOString().split('T')[0];
-    if(g('qidt')) g('qidt').value = today;
+    setTimeout(function(){
+      // Replace the default blank item with the converted items
+      _qitems = convertedItems.length ? convertedItems : [{name:'', qty:1, rate:0, amount:0}];
+      buildQItemRows();
 
-    // Receiver Name — from partyName or receiver
-    var name = inv.partyName || inv.receiverName || inv.receiver || '';
-    if(g('qirecv')) g('qirecv').value = name;
+      // Date — keep the source invoice date, fall back to today
+      var today = new Date().toISOString().split('T')[0];
+      if(g('qidt')) g('qidt').value = inv.invoiceDate || today;
 
-    // Party lookups — try to resolve the party record for state/district/stateCode + rate memory
-    var party = null;
-    if(inv.partyId) party = (_par||[]).find(function(p){ return p.id === inv.partyId; });
-    if(!party && name) party = (_par||[]).find(function(p){ return p.name === name; });
+      // Receiver Name — from partyName or receiver
+      var name = inv.partyName || inv.receiverName || inv.receiver || '';
+      if(g('qirecv')) g('qirecv').value = name;
 
-    if(party){
-      // fillQParty sets name/state/stateCode/district/payment terms AND loads party rates
-      fillQParty(party.id);
-    } else {
-      // State — from invoice or the party record
-      var state = inv.state || inv.partyState || '';
-      if(g('qi-state')) g('qi-state').value = state;
+      // Party lookups — try to resolve the party record for state/district/stateCode + rate memory
+      var party = null;
+      if(inv.partyId) party = (_par||[]).find(function(p){ return p.id === inv.partyId; });
+      if(!party && name) party = (_par||[]).find(function(p){ return (p.name||'').toLowerCase() === name.toLowerCase(); });
 
-      // District — from invoice fields
-      var district = inv.district || inv.partyDistrict || inv.partyCity || '';
-      if(district && g('qi-district')) g('qi-district').value = district;
+      if(party){
+        // fillQParty sets name/state/stateCode/district/payment terms AND loads party rates
+        fillQParty(party.id);
+      } else {
+        // State — from invoice or the party record
+        var state = inv.state || inv.partyState || '';
+        if(g('qi-state')) g('qi-state').value = state;
 
-      // State Code — from invoice
-      var stateCode = inv.stateCode || inv.partyStateCode || '';
-      if(stateCode && g('qi-statecode')) g('qi-statecode').value = stateCode;
+        // District — from invoice fields
+        var district = inv.district || inv.partyDistrict || inv.partyCity || '';
+        if(district && g('qi-district')) g('qi-district').value = district;
 
-      // Payment Terms — copy if available
-      if(g('qipt')) g('qipt').value = inv.paymentTerms || 'Immediate';
-    }
+        // State Code — from invoice
+        var stateCode = inv.stateCode || inv.partyStateCode || '';
+        if(stateCode && g('qi-statecode')) g('qi-statecode').value = stateCode;
 
-    // Vehicle Number
-    var veh = inv.vehicleNumber || inv.vehicle || inv.vehicleNo || '';
-    if(g('qiveh')) g('qiveh').value = veh;
+        // Payment Terms — copy if available
+        if(g('qipt')) g('qipt').value = inv.paymentTerms || 'Immediate';
+      }
 
-    toast('Fields copied from invoice. Add your Quick Invoice items below.','g');
+      // Vehicle Number
+      var veh = inv.vehicleNumber || inv.vehicle || inv.vehicleNo || '';
+      if(g('qiveh')) g('qiveh').value = veh;
+
+      // Notes
+      if(g('qi-notes')) g('qi-notes').value = inv.notes || '';
+
+      // Old balance — copy only if the source invoice has one
+      if(inv.oldBalance && inv.oldBalance.amount){
+        if(g('qi-ob-toggle')) g('qi-ob-toggle').checked = true;
+        if(g('qi-ob-amt')) g('qi-ob-amt').value = inv.oldBalance.amount;
+        if(g('qi-ob-date')) g('qi-ob-date').value = inv.oldBalance.date || '';
+        toggleQOldBal();
+      }
+
+recalcQTotals();
+    toast(convertedItems.length ? convertedItems.length+' product(s) copied from invoice.' : 'No products found in the source invoice.', convertedItems.length ? 'g' : 'r');
   }, 150);
+}, 100);
 }
 
 // ── Open Quick Invoice Form ──
