@@ -1892,9 +1892,12 @@ document.addEventListener('DOMContentLoaded',function(){
     // Inside a scrollable sheet that is scrolled down: allow it to scroll normally
     var sheet = target.closest('.shwrap');
     if(sheet && sheet.scrollTop > 0) return;
-    // Only suppress a downward pull when the document is at the very top
-    var se = document.scrollingElement || document.documentElement;
-    if(se.scrollTop <= 0) e.preventDefault();
+    // The app scrolls the <body> (overflow-x:hidden computes overflow-y:auto),
+    // so document.scrollingElement (html) stays at 0. Use BOTH scroll positions.
+    var htmlTop = document.documentElement ? document.documentElement.scrollTop : 0;
+    var bodyTop = document.body ? document.body.scrollTop : 0;
+    var top = Math.max(htmlTop, bodyTop);
+    if(top <= 0) e.preventDefault();
   }, {passive:false});
   document.addEventListener('touchend', function(){ _ptrTracking = false; }, {passive:true});
   document.addEventListener('touchcancel', function(){ _ptrTracking = false; }, {passive:true});
