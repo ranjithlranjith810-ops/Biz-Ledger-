@@ -1062,6 +1062,7 @@ select option{background:#0C1B30;color:var(--t1);}
     <div id="qdetail-body"></div>
     <button class="btn btnp mt8" onclick="dlQPDF()"><span class="mi material-icons-round">picture_as_pdf</span>Download PDF</button>
     <button class="btn" style="background:#0E1B33;color:var(--t1);margin-top:10px" onclick="shareQPDF()"><span class="mi material-icons-round">share</span>Share PDF</button>
+    <button class="btn" style="background:#0C2A1A;color:#00BCD4;margin-top:10px" onclick="convertToQuickInv(_currQInv)"><span class="mi material-icons-round">bolt</span>Convert to Quick Invoice</button>
     <button class="btn" style="background:#0E1B33;color:var(--t1);margin-top:10px" onclick="doEditQInv()"><span class="mi material-icons-round">edit</span>Edit Invoice</button>
     <button class="btn btno mt8" onclick="doDelQInv()"><span class="mi material-icons-round">delete</span>Delete Invoice</button>
   </div>
@@ -1085,6 +1086,7 @@ select option{background:#0C1B30;color:var(--t1);}
       <div class="tpl-card" onclick="selTpl('outline',this)"><div class="tpl-prev" style="background:#fff;border:2px solid #000;color:#000;font-weight:900">OUTLINE</div><span>Outline</span><small>B&amp;W No Fill</small></div>
     </div>
     <button class="btn btnp mt8" onclick="openPDFPreview()"><span class="mi material-icons-round">visibility</span>Preview &amp; Share PDF</button>
+    <button class="btn" style="background:#0C2A1A;color:#00BCD4;margin-top:10px" onclick="convertToQuickInv(_currInv)"><span class="mi material-icons-round">bolt</span>Convert to Quick Invoice</button>
     <button class="btn" style="background:#0E1B33;color:var(--t1);margin-top:10px" onclick="doEditInv()"><span class="mi material-icons-round">edit</span>Edit Invoice</button>
     <button class="btn btno mt8" onclick="doDelInv()"><span class="mi material-icons-round">delete</span>Delete Invoice</button>
   </div>
@@ -4571,6 +4573,64 @@ loadData = function(){
   _loadData_qinv_orig();
   loadQInv();
 };
+
+// ── Convert a regular invoice OR quick invoice into a new Quick Invoice ──
+// Copies: party name, state, district, state code, vehicle number, payment terms
+// Does NOT copy: items, amounts, GST (Quick Invoice has its own items)
+function convertToQuickInv(inv){
+  if(!inv){ toast('No invoice selected','r'); return; }
+
+  // Close whichever detail sheet is open
+  cls('ovdetail');
+  cls('ovqdetail');
+
+  // Open the Quick Invoice form fresh
+  openQInvF(null);
+
+  // Wait for the form to render, then fill the fields
+  setTimeout(function(){
+    // Invoice number — leave qino as-is, it will have the next auto-generated number
+
+    // Date — use today's date
+    var today = new Date().toISOString().split('T')[0];
+    if(g('qidt')) g('qidt').value = today;
+
+    // Receiver Name — from partyName or receiver
+    var name = inv.partyName || inv.receiverName || inv.receiver || '';
+    if(g('qirecv')) g('qirecv').value = name;
+
+    // Party lookups — try to resolve the party record for state/district/stateCode + rate memory
+    var party = null;
+    if(inv.partyId) party = (_par||[]).find(function(p){ return p.id === inv.partyId; });
+    if(!party && name) party = (_par||[]).find(function(p){ return p.name === name; });
+
+    if(party){
+      // fillQParty sets name/state/stateCode/district/payment terms AND loads party rates
+      fillQParty(party.id);
+    } else {
+      // State — from invoice or the party record
+      var state = inv.state || inv.partyState || '';
+      if(g('qi-state')) g('qi-state').value = state;
+
+      // District — from invoice fields
+      var district = inv.district || inv.partyDistrict || inv.partyCity || '';
+      if(district && g('qi-district')) g('qi-district').value = district;
+
+      // State Code — from invoice
+      var stateCode = inv.stateCode || inv.partyStateCode || '';
+      if(stateCode && g('qi-statecode')) g('qi-statecode').value = stateCode;
+
+      // Payment Terms — copy if available
+      if(g('qipt')) g('qipt').value = inv.paymentTerms || 'Immediate';
+    }
+
+    // Vehicle Number
+    var veh = inv.vehicleNumber || inv.vehicle || inv.vehicleNo || '';
+    if(g('qiveh')) g('qiveh').value = veh;
+
+    toast('Fields copied from invoice. Add your Quick Invoice items below.','g');
+  }, 150);
+}
 
 // ── Open Quick Invoice Form ──
 function openQInvF(inv){
