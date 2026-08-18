@@ -36,6 +36,10 @@
         },
         "expenses": {
           ".indexOn": ["_ts", "category"]
+        },
+        "partyRates": {
+          ".read": "auth != null && auth.uid === $ownerUid",
+          ".write": "auth != null && auth.uid === $ownerUid"
         }
       }
     },

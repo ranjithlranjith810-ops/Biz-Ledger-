@@ -1027,6 +1027,19 @@ select option{background:#0C1B30;color:var(--t1);}
       <div style="font-size:18px;font-weight:700;color:var(--p)" id="qi-count">0</div>
     </div>
 
+    <div class="fg" style="margin-bottom:6px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="qi-ob-toggle" onchange="toggleQOldBal()" style="width:16px;height:16px;accent-color:var(--p)"/>
+        Include Old Balance
+      </label>
+    </div>
+    <div id="qi-ob-fields" style="display:none">
+      <div class="fr">
+        <div class="fg" style="flex:1;margin-right:8px"><label>Old Balance Amount ₹</label><input type="number" id="qi-ob-amt" placeholder="0.00" min="0" step="any"/></div>
+        <div class="fg" style="flex:1"><label>As of Date</label><input type="date" id="qi-ob-date"/></div>
+      </div>
+    </div>
+
     <div class="total-box">
       <div class="trow grand"><span>Total Amount</span><span id="qi-total">₹0.00</span></div>
       <div class="trow words" id="qi-words"></div>
@@ -1736,8 +1749,34 @@ function swPg(pg,el){
   };
   if(renderMap[pg]) setTimeout(renderMap[pg], 0);
 }
-function opn(id){g(id).classList.add('on');document.body.style.overflow='hidden';}
-function cls(id){g(id).classList.remove('on');document.body.style.overflow='';}
+var _invoiceFormDirty = false;   // set true when any invoice field is edited, cleared on save/cancel
+function opn(id){
+  g(id).classList.add('on');document.body.style.overflow='hidden';
+  try{ history.pushState({blOverlay:id}, ''); }catch(e){}
+}
+function cls(id){
+  var ov=g(id); if(ov) ov.classList.remove('on');
+  if(!document.querySelector('.ov.on')) document.body.style.overflow='';
+  if(id==='ovinv'||id==='ovqinv') _invoiceFormDirty=false;
+}
+// Prevent accidental reload / data loss while an invoice form has unsaved edits
+window.addEventListener('beforeunload', function(e){
+  if(_invoiceFormDirty){
+    e.preventDefault();
+    e.returnValue='';
+  }
+});
+// Hardware/gesture back closes the current overlay instead of leaving the app
+window.addEventListener('popstate', function(e){
+  var ov=e.state && e.state.blOverlay;
+  if(ov && g(ov) && g(ov).classList.contains('on')) cls(ov);
+});
+// Mark the invoice form dirty whenever any field inside it is edited
+document.addEventListener('input', function(e){
+  var t=e.target; if(!t || !t.closest) return;
+  var ov=t.closest('.ov');
+  if(ov && (ov.id==='ovinv'||ov.id==='ovqinv')) _invoiceFormDirty=true;
+});
 document.addEventListener('DOMContentLoaded',function(){
   // Close overlays on backdrop tap
   document.querySelectorAll('.ov').forEach(function(s){
@@ -4498,6 +4537,8 @@ var _qitems = [];      // working items for the open quick-invoice form
 var _eqid = null;      // id being edited (null = new)
 var _currQInv = null, _currQInvId = null;
 var _qMode = false;    // true while the "Quick" tab is active on the Invoices page
+var _qPartyId = null;  // party currently selected in the Quick Invoice form
+var _qPartyRates = {}; // cached last-used rates for the selected party: {productName_lc: {rate,lastUsed,productName}}
 
 function qNextNo(){
   var pfx = 'QIN/';
@@ -4534,6 +4575,7 @@ loadData = function(){
 // ── Open Quick Invoice Form ──
 function openQInvF(inv){
   _eqid = inv ? inv.id : null;
+  _qPartyId = null; _qPartyRates = {};
   _qitems = (inv && inv.items) ? JSON.parse(JSON.stringify(inv.items)).map(function(it){
     var qty = parseFloat(it.qty || it.quantity || 0) || 0;
     var rate = parseFloat(it.rate || it.unitPrice || 0) || 0;
@@ -4556,10 +4598,24 @@ function openQInvF(inv){
   g('qiveh').value = inv ? (inv.vehicleNo||'') : '';
   g('qipt').value = inv ? (inv.paymentTerms||'Immediate') : 'Immediate';
   g('qi-notes').value = inv ? (inv.notes||'') : '';
+  // Old Balance — populate from saved invoice
+  if(g('qi-ob-toggle')){
+    var ob = (inv && inv.oldBalance) || null;
+    g('qi-ob-toggle').checked = !!(ob && ob.amount);
+    g('qi-ob-amt').value = ob ? (ob.amount||'') : '';
+    g('qi-ob-date').value = ob ? (ob.date||'') : '';
+    toggleQOldBal();
+    if(g('qi-ob-amt')) g('qi-ob-amt').addEventListener('input', function(){ recalcQTotals(); });
+  }
   buildQItemRows();
   opn('ovqinv');
   setupQVehAC();
   setupQPartyAC();
+}
+
+function toggleQOldBal(){
+  var on = g('qi-ob-toggle') && g('qi-ob-toggle').checked;
+  if(g('qi-ob-fields')) g('qi-ob-fields').style.display = on ? 'block' : 'none';
 }
 
 // Receiver-name autocomplete — pulls from existing Parties (customers), like the main invoice form
@@ -4583,9 +4639,21 @@ function setupQPartyAC(){
 function fillQParty(pid){
   var p = (_par||[]).find(function(x){ return x.id===pid; });
   if(!p) return;
+  _qPartyId = pid;
   if(g('qirecv')) g('qirecv').value = p.name;
   if(g('qi-state') && p.state) g('qi-state').value = p.state;
+  if(g('qi-statecode') && p.stateCode) g('qi-statecode').value = p.stateCode;
+  if(g('qi-district') && p.district) g('qi-district').value = p.district;
+  if(g('qipt')) g('qipt').value = p.paymentTerms || 'Immediate';
   if(g('qparty-sugg')) g('qparty-sugg').style.display='none';
+  // Load last-used rates for this party (rate memory)
+  _qPartyRates = {};
+  DB.ref(ep()+'partyRates/'+pid).once('value').then(function(s){
+    if(s.exists()) _qPartyRates = s.val() || {};
+  }).catch(function(e){ console.error('partyRates load:', e); });
+}
+function resetQParty(){
+  _qPartyId = null; _qPartyRates = {};
 }
 
 function buildQItemRows(){
@@ -4616,6 +4684,14 @@ function buildQItemRows(){
     [nm, qty, price].forEach(function(el){
       if(el) el.addEventListener('input', function(){ syncQItems(); recalcQTotals(); });
     });
+    // Rate memory — when the typed product name matches a saved party rate, auto-fill the rate
+    if(nm && price){
+      nm.addEventListener('input', function(){
+        if(!_qPartyId || !_qPartyRates) return;
+        var rec = _qPartyRates[(nm.value||'').trim().toLowerCase()];
+        if(rec && rec.rate != null && !price.value) price.value = rec.rate;
+      });
+    }
     // Product-name autocomplete — pulls from existing Inventory products (name only, no price/HSN copied)
     if(nm){
       var sugg = g('qprod-sugg-'+i);
@@ -4639,6 +4715,11 @@ function fillQProdItem(idx, pid){
   var p = (_pro||[]).find(function(x){ return x.id===pid; });
   if(!p) return;
   if(g('qiname-'+idx)) g('qiname-'+idx).value = p.name || '';
+  // Rate memory — if this party has a saved rate for the product, prefill it
+  if(_qPartyId && _qPartyRates){
+    var rec = _qPartyRates[(p.name||'').trim().toLowerCase()];
+    if(rec && rec.rate != null && g('qiprice-'+idx) && !g('qiprice-'+idx).value) g('qiprice-'+idx).value = rec.rate;
+  }
   var ps = g('qprod-sugg-'+idx); if(ps) ps.style.display='none';
   syncQItems(); recalcQTotals();
 }
@@ -4669,6 +4750,8 @@ function recalcQTotals(){
   syncQItems();
   var total = _qitems.reduce(function(s, it){ return s + (it.amount||0); }, 0);
   var filled = _qitems.filter(function(it){ return it.name && it.name.trim(); });
+  // Include old balance if enabled
+  if(g('qi-ob-toggle') && g('qi-ob-toggle').checked) total += parseFloat((g('qi-ob-amt')||{}).value) || 0;
   if(g('qi-total')) g('qi-total').textContent = fmt(total);
   if(g('qi-count')) g('qi-count').textContent = filled.length;
   if(g('qi-words')) g('qi-words').textContent = total > 0 ? 'Rupees: '+n2w(Math.round(total))+' Only' : '';
@@ -4678,18 +4761,19 @@ function recalcQTotals(){
 function setupQVehAC(){
   var inp = g('qiveh'), sugg = g('qveh-sugg');
   if(!inp || !sugg) return;
-  inp.oninput = function(){
-    var q = inp.value.toLowerCase();
-    if(!q){ sugg.style.display = 'none'; return; }
-    var m = (_veh||[]).filter(function(v){
+  function showVeh(q){
+    if(!_veh.length){ sugg.style.display = 'none'; return; }
+    var m = q ? _veh.filter(function(v){
       return v.number.toLowerCase().includes(q) || (v.driver||'').toLowerCase().includes(q);
-    }).slice(0,5);
+    }).slice(0,5) : _veh.slice(0,5);
     if(!m.length){ sugg.style.display = 'none'; return; }
     sugg.style.display = 'block';
     sugg.innerHTML = m.map(function(v){
       return '<div class="sugg-item" onmousedown="fillQVeh(\''+v.id+'\')"><strong>'+v.number+'</strong> — '+v.type+(v.driver?' ('+v.driver+')':'')+'</div>';
     }).join('');
-  };
+  }
+  inp.onfocus = function(){ showVeh(inp.value.toLowerCase()); };   // show all saved vehicles on focus
+  inp.oninput = function(){ showVeh(inp.value.toLowerCase()); };
   inp.onblur = function(){ setTimeout(function(){ sugg.style.display = 'none'; }, 250); };
 }
 function fillQVeh(vid){
@@ -4708,6 +4792,11 @@ function saveQInv(){
   var filled = _qitems.filter(function(it){ return it.name && it.qty > 0 && it.rate > 0; });
   if(!filled.length){ toast('Add at least one product with name, quantity and rate','r'); return; }
   var total = filled.reduce(function(s, it){ return s + (it.amount||0); }, 0);
+  var ob = null;
+  if(g('qi-ob-toggle') && g('qi-ob-toggle').checked && parseFloat((g('qi-ob-amt')||{}).value) > 0){
+    ob = { amount: parseFloat(g('qi-ob-amt').value), date: (g('qi-ob-date')||{}).value || '' };
+    total += ob.amount;
+  }
 
   var d = {
     invoiceNumber: no,
@@ -4718,6 +4807,7 @@ function saveQInv(){
     stateCode: gv('qi-statecode'),
     vehicleNo: gv('qiveh'),
     paymentTerms: gv('qipt') || 'Immediate',
+    oldBalance: ob,
     items: JSON.parse(JSON.stringify(filled)),
     totalAmount: parseFloat(total.toFixed(2)),
     productCount: filled.length,
@@ -4728,12 +4818,48 @@ function saveQInv(){
   var sbtn = g('qinv-save-btn');
   if(sbtn) sbtn.disabled = true;
 
+  // Rate memory — write last-used rates back to the selected party
+  function savePartyRates(){
+    var pid = _qPartyId;
+    if(!pid){ // editing an existing invoice — resolve the party from the receiver name
+      var match = (_par||[]).find(function(p){ return p.name === recv; });
+      if(match) pid = match.id;
+    }
+    if(!pid) return;
+    if(filled.length){
+      var up = {};
+      filled.forEach(function(it){
+        if(!it.name || !it.rate) return;
+        up[it.name.trim().toLowerCase()] = {
+          rate: it.rate,
+          lastUsed: Date.now(),
+          productName: it.name
+        };
+      });
+      if(Object.keys(up).length) DB.ref(ep()+'partyRates/'+pid).update(up).catch(function(e){ console.error('partyRates save:', e); });
+    }
+    // Save entered State / District / State Code / Payment Terms back to the party record
+    var pUpd = {};
+    var sVal = gv('qi-state'), dVal = gv('qi-district'), scVal = gv('qi-statecode'), ptVal = gv('qipt');
+    if(sVal)  pUpd.state = sVal;
+    if(dVal)  pUpd.district = dVal;
+    if(scVal) pUpd.stateCode = scVal;
+    if(ptVal) pUpd.paymentTerms = ptVal;
+    if(Object.keys(pUpd).length){
+      DB.ref(ep()+'parties/'+pid).update(pUpd).then(function(){
+        var pi = _par.findIndex(function(x){ return x.id === pid; });
+        if(pi > -1) Object.assign(_par[pi], pUpd);
+      }).catch(function(e){ console.error('party update:', e); });
+    }
+  }
+
   if(_eqid){
     var editId = _eqid;
     DB.ref(ep()+'quickInvoices/'+editId).update(d).then(function(){
       var idx = _qinv.findIndex(function(x){ return x.id === editId; });
       if(idx > -1){ d.id = editId; _qinv[idx] = d; }
       _eqid = null;
+      savePartyRates();
       cls('ovqinv'); renderQI();
       toast('Quick invoice updated!','g');
       if(sbtn) sbtn.disabled = false;
@@ -4742,6 +4868,8 @@ function saveQInv(){
     DB.ref(ep()+'quickInvoices').push(d).then(function(ref){
       d.id = ref.key;
       _qinv.unshift(d);
+      _eqid = null;
+      savePartyRates();
       cls('ovqinv'); renderQI();
       toast('Quick invoice saved!','g');
       if(sbtn) sbtn.disabled = false;
@@ -4789,6 +4917,7 @@ function openQDetail(inv){
     +'</div>'
     +'<div class="dcard"><h4>Products</h4>'
     +items.map(function(it){ return '<div class="drow"><span>'+(it.name||'Item')+'</span><span>'+it.qty+' × '+fmt(it.rate)+' = '+fmt(it.amount)+'</span></div>'; }).join('')
+    +(inv.oldBalance && inv.oldBalance.amount ? '<div class="drow"><span>Old Balance'+(inv.oldBalance.date?' ('+fd(inv.oldBalance.date)+')':'')+'</span><span>'+fmt(inv.oldBalance.amount)+'</span></div>' : '')
     +'<div class="drow dtotal"><span>Total Amount</span><span>'+fmt(inv.totalAmount)+'</span></div>'
     +'<div style="font-size:11px;color:var(--t2);margin-top:6px;font-style:italic">'+n2w(Math.round(inv.totalAmount||0))+' Only</div>'
     +'</div>';
@@ -4842,7 +4971,14 @@ function buildQPDF(inv){
   row(lx, lv, ly, 'Invoice No :', inv.invoiceNumber);
   row(rx, rv, ly, 'Date :', fd(inv.invoiceDate));
   ly += 8;
-  row(lx, lv, ly, 'Receiver Name :', inv.receiverName);
+  // Receiver Name — wrap long names and shrink font so they stay inside the info box column
+  doc.setFont('helvetica','bold'); doc.text('Receiver Name :', lx, ly);
+  var rn = (inv.receiverName||'—') + '';
+  var rnSize = rn.length > 35 ? 7.5 : 9;
+  doc.setFont('helvetica','normal'); doc.setFontSize(rnSize);
+  var rnLines = doc.splitTextToSize(rn, (W/2+2) - lv);
+  doc.text(rnLines, lv, ly);
+  doc.setFontSize(9);
   row(rx, rv, ly, 'Vehicle No :', inv.vehicleNo);
   ly += 8;
   row(lx, lv, ly, 'State :', inv.state);
@@ -4854,6 +4990,10 @@ function buildQPDF(inv){
   // Products table
   var items = inv.items || [];
   var tdata = items.map(function(it, i){ return [(i+1).toString(), it.name||'', (it.qty||0).toString(), fmtN(it.rate||0), fmtN(it.amount||0)]; });
+  // Old Balance row — appended as the last line item
+  if(inv.oldBalance && inv.oldBalance.amount){
+    tdata.push([(tdata.length+1).toString(), 'Old Balance'+(inv.oldBalance.date?' ('+fd(inv.oldBalance.date)+')':''), '1', fmtN(inv.oldBalance.amount), fmtN(inv.oldBalance.amount)]);
+  }
 
   doc.autoTable({
     startY: 82,
