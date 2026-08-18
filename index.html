@@ -1108,6 +1108,7 @@ select option{background:#0C1B30;color:var(--t1);}
     <div class="fr"><div class="fg"><label>Phone</label><input id="fpph" type="tel"/></div><div class="fg"><label>Email</label><input id="fpem" type="email"/></div></div>
     <div class="fg"><label>Address (Main Branch)</label><textarea id="fpad" style="min-height:52px" placeholder="Main branch address..."></textarea></div>
     <div class="fr"><div class="fg"><label>City</label><input id="fpci"/></div><div class="fg"><label>State</label><input id="fpst"/></div></div>
+    <div class="fr"><div class="fg"><label>District</label><input id="fpds"/></div><div class="fg"><label>State Code</label><input id="fpsc" placeholder="e.g. 33"/></div></div>
     <div class="fr"><div class="fg"><label>GST Number</label><input id="fpgs"/></div><div class="fg"><label>PAN Number</label><input id="fppn"/></div></div>
     <!-- Multi-Branch Section -->
     <div style="margin-top:4px">
@@ -2603,6 +2604,8 @@ function openPaF(pty){
   g('fpad').value=pty?pty.address||'':'';
   g('fpci').value=pty?pty.city||'':'';
   g('fpst').value=pty?pty.state||'':'';
+  g('fpds').value=pty?pty.district||'':'';
+  g('fpsc').value=pty?pty.stateCode||'':'';
   g('fpgs').value=pty?pty.gstNumber||'':'';
   g('fppn').value=pty?pty.panNumber||'':'';
   // Load existing branches
@@ -2617,7 +2620,7 @@ function savePa(){
   var n=gv('fpnm');if(!n){toast('Name required','r');return;}
   collectBranches();
   var d={name:n,type:_ptype,phone:gv('fpph'),email:gv('fpem'),
-    address:gv('fpad'),city:gv('fpci'),state:gv('fpst'),
+    address:gv('fpad'),city:gv('fpci'),state:gv('fpst'),district:gv('fpds'),stateCode:gv('fpsc'),
     gstNumber:gv('fpgs'),panNumber:gv('fppn'),
     branches:_branches.filter(function(b){return b.address;})};
   if(_epid){
