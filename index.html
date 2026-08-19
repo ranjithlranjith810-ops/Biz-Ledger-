@@ -1025,7 +1025,17 @@ select option{background:#0C1B30;color:var(--t1);}
         <span class="mi material-icons-round" style="color:var(--p);font-size:18px">inventory_2</span>
         <span style="font-size:12px;color:var(--t2);font-weight:600">Number of Products</span>
       </div>
-      <div style="font-size:18px;font-weight:700;color:var(--p)" id="qi-count">0</div>
+      <div style="display:flex;align-items:center;gap:16px;">
+        <div style="text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:var(--p)" id="qi-count">0</div>
+          <div style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px">Products</div>
+        </div>
+        <div style="width:1px;height:28px;background:var(--bdr)"></div>
+        <div style="text-align:center;">
+          <div style="font-size:18px;font-weight:700;color:var(--warn)" id="qi-total-qty">0</div>
+          <div style="font-size:9px;color:var(--t2);text-transform:uppercase;letter-spacing:.5px">Total Qty</div>
+        </div>
+      </div>
     </div>
 
     <div class="fg" style="margin-bottom:6px">
@@ -1490,7 +1500,19 @@ function gv(id){var el=g(id);return el?(el.value||'').trim():'';}
 function nv(id){var el=g(id);return parseFloat(el?el.value:0)||0;}
 function fmt(n){return '₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtN(n){return Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});}
-function fd(s){try{return new Date(s).toLocaleDateString('en-IN',{day:'2-digit',month:'2-digit',year:'numeric'});}catch(e){return s||'—';}}
+function fd(s){
+  if(!s)return '—';
+  try{
+    var str=String(s).split('T')[0];
+    var pts=str.split('-');
+    if(pts.length===3){
+      var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return pts[2].padStart(2,'0')+'/'+( months[parseInt(pts[1],10)-1]||pts[1])+'/'+pts[0];
+    }
+    var d=new Date(s);
+    return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
+  }catch(e){return s||'—';}
+}
 function td(){return new Date().toISOString().split('T')[0];}
 function ep(){return 'erp/'+(_companyOwnerId||_uid)+'/';}
 
@@ -2222,10 +2244,14 @@ function saveInv(){
     DB.ref(ep()+'invoices').push(d).then(function(ref){
       d.id=ref.key;
       _inv.unshift(d);
-      cls('ovinv');renderI();renderD();
-      toast('Invoice saved!','g');
-      if(sbtn)sbtn.disabled=false;
-      // Auto-add new items to inventory if not already present
+      cls('ovinv'); renderI(); renderD();
+      toast('Invoice saved! ✅','g');
+      if(sbtn) sbtn.disabled=false;
+      // Scroll invoice list to top so new invoice is visible
+      setTimeout(function(){
+        var el=g('ilist'); if(el) el.scrollTop=0;
+        var pg=g('pg-i'); if(pg) pg.scrollTop=0;
+      }, 150);
       autoAddToInventory(d.items, d.gstRate||18);
     }).catch(function(e){toast('Error: '+e.message,'r');if(sbtn)sbtn.disabled=false;});
   }
@@ -2323,9 +2349,12 @@ function doEditInv(){
 function doDelInv(){
   var inv=_freshInv();if(!inv)return;_currInv=inv;
   if(!confirm('Delete invoice '+(_currInv?_currInv.invoiceNumber:'')+'?'))return;
-  DB.ref(ep()+'invoices/'+_currInv.id).remove().then(function(){
-    _inv=_inv.filter(function(x){return x.id!==_currInv.id;});
-    cls('ovdetail');renderI();renderD();toast('Deleted','g');
+  var delId = _currInv.id;
+  // Remove locally first to prevent reappear
+  _inv=_inv.filter(function(x){return x.id!==delId;});
+  cls('ovdetail');renderI();
+  DB.ref(ep()+'invoices/'+delId).remove().then(function(){
+    renderD();toast('Deleted','g');
   }).catch(function(e){toast(e.message,'r');});
 }
 
@@ -3918,8 +3947,16 @@ function openImportedInvoice(){
       notes: inv.notes||'Imported from PDF',
       items: _items
     };
-    openInvF(fake, 'sales');
-    toast('PDF imported! Review and save.','g');
+    // Switch to Invoices page, Official mode, Sales tab BEFORE opening form
+    swPg('i', null);
+    if(typeof swInvMode==='function') swInvMode('official', g('inv-mode-official'));
+    if(typeof swIt==='function') swIt('sales', g('tbs'));
+    if(g('qilist')) g('qilist').style.display='none';
+    if(g('ilist'))  g('ilist').style.display='block';
+    setTimeout(function(){
+      openInvF(fake, 'sales');
+      toast('PDF imported! Review all fields and tap Save Invoice.','g');
+    }, 80);
     _importedInvData = null;
   }
 }
@@ -4760,6 +4797,11 @@ function convertToQuickInv(inv){
         if(g('qi-ob-amt')) g('qi-ob-amt').value = inv.oldBalance.amount;
         if(g('qi-ob-date')) g('qi-ob-date').value = inv.oldBalance.date || '';
         toggleQOldBal();
+      } else {
+        if(g('qi-ob-toggle')) g('qi-ob-toggle').checked = false;
+        if(g('qi-ob-amt')) g('qi-ob-amt').value = '';
+        if(g('qi-ob-date')) g('qi-ob-date').value = '';
+        toggleQOldBal();
       }
 
 recalcQTotals();
@@ -4812,6 +4854,13 @@ function openQInvF(inv){
 function toggleQOldBal(){
   var on = g('qi-ob-toggle') && g('qi-ob-toggle').checked;
   if(g('qi-ob-fields')) g('qi-ob-fields').style.display = on ? 'block' : 'none';
+  // Wire old balance amount to live total update
+  var obAmtEl = g('qi-ob-amt');
+  if(obAmtEl && !obAmtEl._wired){
+    obAmtEl.addEventListener('input', recalcQTotals);
+    obAmtEl._wired = true;
+  }
+  recalcQTotals();
 }
 
 // Receiver-name autocomplete — pulls from existing Parties (customers), like the main invoice form
@@ -4825,9 +4874,16 @@ function setupQPartyAC(){
     if(!matches.length){ sugg.style.display='none'; return; }
     sugg.style.display='block';
     sugg.innerHTML = matches.map(function(p){
+      var distLabel = p.district||p.city||'';
       return '<div class="sugg-item" onmousedown="fillQParty(\''+p.id+'\')">'
-        +'<strong>'+p.name+'</strong>'+(p.city?' <span style="color:var(--t2);font-size:11px">'+p.city+'</span>':'')+'</div>';
+        +'<strong>'+p.name+'</strong>'
+        +(distLabel?' <span style="color:var(--t2);font-size:11px">'+distLabel+'</span>':'')
+        +(p.state?' <span style="color:var(--t2);font-size:10px"> · '+p.state+'</span>':'')
+        +'</div>';
     }).join('');
+    // Auto-fill if exact match
+    var exact = src.find(function(p){ return (p.name||'').toLowerCase()===q; });
+    if(exact) fillQParty(exact.id);
   };
   inp.onfocus = function(){ inp.oninput(); };
   inp.onblur = function(){ setTimeout(function(){ sugg.style.display='none'; }, 250); };
@@ -4836,11 +4892,13 @@ function fillQParty(pid){
   var p = (_par||[]).find(function(x){ return x.id===pid; });
   if(!p) return;
   _qPartyId = pid;
-  if(g('qirecv')) g('qirecv').value = p.name;
-  if(g('qi-state') && p.state) g('qi-state').value = p.state;
-  if(g('qi-statecode') && p.stateCode) g('qi-statecode').value = p.stateCode;
-  if(g('qi-district') && p.district) g('qi-district').value = p.district;
-  if(g('qipt')) g('qipt').value = p.paymentTerms || 'Immediate';
+  if(g('qirecv')) g('qirecv').value = p.name || '';
+  // Always set — even if blank — so stale data from previous party is cleared
+  // Use city as fallback when district is empty
+  if(g('qi-state'))     g('qi-state').value     = p.state     || '';
+  if(g('qi-statecode')) g('qi-statecode').value = p.stateCode || '';
+  if(g('qi-district'))  g('qi-district').value  = p.district  || p.city || '';
+  if(g('qipt'))         g('qipt').value          = p.paymentTerms || 'Immediate';
   if(g('qparty-sugg')) g('qparty-sugg').style.display='none';
   // Load last-used rates for this party (rate memory)
   _qPartyRates = {};
@@ -4966,7 +5024,7 @@ function syncQItems(){
     if(g('qiqty-'+i)) it.qty = parseFloat(g('qiqty-'+i).value) || 0;
     if(g('qiprice-'+i)) it.rate = parseFloat(g('qiprice-'+i).value) || 0;
     it.amount = Math.round((it.qty * it.rate) * 100) / 100;
-    if(g('qiamt-'+i)) g('qiamt-'+i).value = it.amount || '';
+    if(g('qiamt-'+i)) g('qiamt-'+i).value = (it.amount >= 0) ? fmtN(it.amount) : '';
   });
 }
 function recalcQTotals(){
@@ -4977,6 +5035,8 @@ function recalcQTotals(){
   if(g('qi-ob-toggle') && g('qi-ob-toggle').checked) total += parseFloat((g('qi-ob-amt')||{}).value) || 0;
   if(g('qi-total')) g('qi-total').textContent = fmt(total);
   if(g('qi-count')) g('qi-count').textContent = filled.length;
+  var liveQty = _qitems.reduce(function(s,it){ return s+(parseFloat(it.qty)||0); }, 0);
+  if(g('qi-total-qty')) g('qi-total-qty').textContent = liveQty;
   if(g('qi-words')) g('qi-words').textContent = total > 0 ? 'Rupees: '+n2w(Math.round(total))+' Only' : '';
 }
 
@@ -4995,7 +5055,7 @@ function setupQVehAC(){
       return '<div class="sugg-item" onmousedown="fillQVeh(\''+v.id+'\')"><strong>'+v.number+'</strong> — '+v.type+(v.driver?' ('+v.driver+')':'')+'</div>';
     }).join('');
   }
-  inp.onfocus = function(){ showVeh(inp.value.toLowerCase()); };   // show all saved vehicles on focus
+  inp.onfocus = function(){ showVeh(''); };  // always show all vehicles on focus
   inp.oninput = function(){ showVeh(inp.value.toLowerCase()); };
   inp.onblur = function(){ setTimeout(function(){ sugg.style.display = 'none'; }, 250); };
 }
@@ -5015,6 +5075,7 @@ function saveQInv(){
   var filled = _qitems.filter(function(it){ return it.name && it.qty > 0 && it.rate > 0; });
   if(!filled.length){ toast('Add at least one product with name, quantity and rate','r'); return; }
   var total = filled.reduce(function(s, it){ return s + (it.amount||0); }, 0);
+  var totalQty = filled.reduce(function(s, it){ return s + (parseFloat(it.qty)||0); }, 0);
   var ob = null;
   if(g('qi-ob-toggle') && g('qi-ob-toggle').checked && parseFloat((g('qi-ob-amt')||{}).value) > 0){
     ob = { amount: parseFloat(g('qi-ob-amt').value), date: (g('qi-ob-date')||{}).value || '' };
@@ -5034,6 +5095,7 @@ function saveQInv(){
     items: JSON.parse(JSON.stringify(filled)),
     totalAmount: parseFloat(total.toFixed(2)),
     productCount: filled.length,
+    totalQty: totalQty,
     notes: gv('qi-notes'),
     _ts: Date.now()
   };
@@ -5136,7 +5198,8 @@ function openQDetail(inv){
     +(inv.stateCode?'<div class="drow"><span>State Code</span><span>'+inv.stateCode+'</span></div>':'')
     +(inv.paymentTerms?'<div class="drow"><span>Payment Terms</span><span>'+inv.paymentTerms+'</span></div>':'')
     +(inv.vehicleNo?'<div class="drow"><span>Vehicle No</span><span>'+inv.vehicleNo+'</span></div>':'')
-    +'<div class="drow"><span>No. of Products</span><span>'+(inv.productCount||items.length)+'</span></div>'
+    +'<div class="drow"><span>No. of Products</span><span style="font-weight:700;color:var(--p)">'+(inv.productCount||items.length)+'</span></div>'
+    +'<div class="drow"><span>Total Qty</span><span style="font-weight:700;color:var(--p)">'+items.reduce(function(s,it){return s+(parseFloat(it.qty)||0);},0)+'</span></div>'
     +'</div>'
     +'<div class="dcard"><h4>Products</h4>'
     +items.map(function(it){ return '<div class="drow"><span>'+(it.name||'Item')+'</span><span>'+it.qty+' × '+fmt(it.rate)+' = '+fmt(it.amount)+'</span></div>'; }).join('')
@@ -5157,11 +5220,17 @@ function doEditQInv(){
 function doDelQInv(){
   var inv = _freshQInv(); if(!inv) return;
   if(!confirm('Delete quick invoice '+(inv.invoiceNumber||'')+'?')) return;
-  DB.ref(ep()+'quickInvoices/'+inv.id).remove().then(function(){
-    _qinv = _qinv.filter(function(x){ return x.id !== inv.id; });
-    cls('ovqdetail'); renderQI();
+  var delId = inv.id;
+  // Remove from local array IMMEDIATELY — prevents reappear on re-render
+  _qinv = _qinv.filter(function(x){ return x.id !== delId; });
+  cls('ovqdetail');
+  renderQI();
+  DB.ref(ep()+'quickInvoices/'+delId).remove().then(function(){
     toast('Deleted','g');
-  }).catch(function(e){ toast(e.message,'r'); });
+    renderD();
+  }).catch(function(e){
+    toast('Delete failed: '+e.message,'r');
+  });
 }
 
 // ── Quick Invoice PDF — minimal layout, no company header, no signature ──
@@ -5224,9 +5293,11 @@ function buildQPDF(inv){
     startY: 82,
     head: [['#','Product / Item','Qty','Rate (₹)','Amount (₹)']],
     body: tdata,
-    foot: [[{content:'No. of Products: '+items.length, colSpan:3, styles:{halign:'left', fontStyle:'bold', fontSize:8}},
+    foot: [[
+      {content:'No. of Products: '+items.length+'  |  Total Qty: '+items.reduce(function(s,it){return s+(parseFloat(it.qty)||0);},0), colSpan:3, styles:{halign:'left', fontStyle:'bold', fontSize:8}},
       {content:'TOTAL', styles:{halign:'right', fontStyle:'bold', fontSize:9}},
-      {content: fmtN(inv.totalAmount||0), styles:{halign:'right', fontStyle:'bold', fontSize:9}}]],
+      {content: fmtN(inv.totalAmount||0), styles:{halign:'right', fontStyle:'bold', fontSize:9}}
+    ]],
     theme:'grid',
     headStyles:{fillColor:[0,131,143], textColor:[255,255,255], fontSize:9, fontStyle:'bold', halign:'center'},
     bodyStyles:{fontSize:9, textColor:[30,30,30]},
