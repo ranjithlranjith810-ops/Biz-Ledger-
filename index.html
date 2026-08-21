@@ -982,7 +982,7 @@ select option{background:#0C1B30;color:var(--t1);}
     <div class="shdl"></div>
     <div class="shhdr">
       <h3 id="qinvft">New Quick Invoice</h3>
-      <button class="shcls" onclick="cls('ovqinv')"><span class="mi material-icons-round">close</span></button>
+      <button class="shcls" onclick="cls('ovqinv');_eqid=null;_qitems=[{name:'',qty:1,rate:0,amount:0}];_qPartyId=null;"><span class="mi material-icons-round">close</span></button>
     </div>
     <hr class="divhr">
 
@@ -1051,8 +1051,32 @@ select option{background:#0C1B30;color:var(--t1);}
       </div>
     </div>
 
+    <!-- Amount Paid -->
+    <div class="fg" style="margin-bottom:6px">
+      <label style="display:flex;align-items:center;gap:8px;cursor:pointer">
+        <input type="checkbox" id="qi-paid-toggle" onchange="toggleQPaid()" style="width:16px;height:16px;accent-color:var(--p)"/>
+        Amount Received / Paid
+      </label>
+    </div>
+    <div id="qi-paid-fields" style="display:none;margin-bottom:10px;">
+      <div class="fr">
+        <div class="fg" style="flex:1;margin-right:8px"><label>Amount Paid ₹</label><input type="number" id="qi-paid-amt" placeholder="0.00" min="0" step="any" oninput="recalcQTotals()"/></div>
+        <div class="fg" style="flex:1"><label>Payment Mode</label>
+          <select id="qi-paid-mode">
+            <option value="Cash">Cash</option>
+            <option value="NEFT/RTGS">NEFT/RTGS</option>
+            <option value="Cheque">Cheque</option>
+            <option value="UPI">UPI</option>
+            <option value="Card">Card</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
     <div class="total-box">
       <div class="trow grand"><span>Total Amount</span><span id="qi-total">₹0.00</span></div>
+      <div id="qi-paid-row" style="display:none" class="trow"><span style="color:var(--ok)">Amount Paid</span><span id="qi-paid-display" style="color:var(--ok)">₹0.00</span></div>
+      <div id="qi-balance-row" style="display:none" class="trow"><span style="color:var(--warn);font-weight:700">Balance Due</span><span id="qi-balance-display" style="color:var(--warn);font-weight:700">₹0.00</span></div>
       <div class="trow words" id="qi-words"></div>
     </div>
 
@@ -1501,16 +1525,25 @@ function nv(id){var el=g(id);return parseFloat(el?el.value:0)||0;}
 function fmt(n){return '₹'+Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fmtN(n){return Number(n||0).toLocaleString('en-IN',{minimumFractionDigits:2,maximumFractionDigits:2});}
 function fd(s){
-  if(!s)return '—';
+  if(!s||s==='—')return '—';
   try{
-    var str=String(s).split('T')[0];
+    var str=String(s).split('T')[0];        // strip time part
     var pts=str.split('-');
-    if(pts.length===3){
+    if(pts.length===3&&pts[0].length===4){  // YYYY-MM-DD format
       var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      return pts[2].padStart(2,'0')+'/'+( months[parseInt(pts[1],10)-1]||pts[1])+'/'+pts[0];
+      var d2=parseInt(pts[2],10);
+      var m2=parseInt(pts[1],10)-1;
+      var y2=pts[0];
+      var monLabel=months[m2]||pts[1];
+      return (d2<10?'0'+d2:d2)+'/'+monLabel+'/'+y2; // DD/Mon/YYYY
     }
-    var d=new Date(s);
-    return d.getDate().toString().padStart(2,'0')+'/'+(d.getMonth()+1).toString().padStart(2,'0')+'/'+d.getFullYear();
+    // Timestamp number — parse as local date using manual method
+    var dt=new Date(typeof s==='number'?s:parseInt(s,10));
+    if(!isNaN(dt)){
+      var months2=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
+      return (dt.getDate()<10?'0':'')+dt.getDate()+'/'+months2[dt.getMonth()]+'/'+dt.getFullYear();
+    }
+    return String(s);
   }catch(e){return s||'—';}
 }
 function td(){return new Date().toISOString().split('T')[0];}
@@ -4790,6 +4823,17 @@ function convertToQuickInv(inv){
 
       // Notes
       if(g('qi-notes')) g('qi-notes').value = inv.notes || '';
+      // Load amount paid
+      if(inv.amountPaid && inv.amountPaid.amount > 0){
+        if(g('qi-paid-toggle')) g('qi-paid-toggle').checked = true;
+        if(g('qi-paid-amt'))  g('qi-paid-amt').value  = inv.amountPaid.amount;
+        if(g('qi-paid-mode') && inv.amountPaid.mode) g('qi-paid-mode').value = inv.amountPaid.mode;
+        toggleQPaid();
+      } else {
+        if(g('qi-paid-toggle')) g('qi-paid-toggle').checked = false;
+        if(g('qi-paid-amt'))  g('qi-paid-amt').value  = '';
+        toggleQPaid();
+      }
 
       // Old balance — copy only if the source invoice has one
       if(inv.oldBalance && inv.oldBalance.amount){
@@ -4854,11 +4898,29 @@ function openQInvF(inv){
 function toggleQOldBal(){
   var on = g('qi-ob-toggle') && g('qi-ob-toggle').checked;
   if(g('qi-ob-fields')) g('qi-ob-fields').style.display = on ? 'block' : 'none';
-  // Wire old balance amount to live total update
   var obAmtEl = g('qi-ob-amt');
   if(obAmtEl && !obAmtEl._wired){
     obAmtEl.addEventListener('input', recalcQTotals);
     obAmtEl._wired = true;
+  }
+  recalcQTotals();
+}
+
+function toggleQPaid(){
+  var on = g('qi-paid-toggle') && g('qi-paid-toggle').checked;
+  if(g('qi-paid-fields')) g('qi-paid-fields').style.display = on ? 'block' : 'none';
+  if(g('qi-paid-row'))    g('qi-paid-row').style.display    = on ? '' : 'none';
+  if(g('qi-balance-row')) g('qi-balance-row').style.display  = on ? '' : 'none';
+  // Auto-fill last-used paid amount + mode for this party
+  if(on && _qPartyId && g('qi-paid-amt') && !g('qi-paid-amt').value){
+    DB.ref(ep()+'partyLastPaid/'+_qPartyId).once('value').then(function(s){
+      if(s.exists()){
+        var v = s.val();
+        if(v.amount && g('qi-paid-amt')) g('qi-paid-amt').value = v.amount;
+        if(v.mode && g('qi-paid-mode'))  g('qi-paid-mode').value = v.mode;
+        recalcQTotals();
+      }
+    }).catch(function(){});
   }
   recalcQTotals();
 }
@@ -4970,7 +5032,11 @@ function buildQItemRows(){
       nm.addEventListener('input', function(){
         if(!_qPartyId) return;
         var prev = getQPrevRate(_qPartyId, nm.value);
-        if(prev != null && !price.value) price.value = prev;
+        if(prev != null && !price.value){
+          price.value = prev;
+          // Recalc amount immediately after rate is auto-filled
+          syncQItems(); recalcQTotals();
+        }
       });
     }
     // Product-name autocomplete — pulls from existing Inventory products (name only, no price/HSN copied)
@@ -4999,7 +5065,9 @@ function fillQProdItem(idx, pid){
   // Rate memory — if this party has a saved rate for the product, prefill it
   if(_qPartyId){
     var prev = getQPrevRate(_qPartyId, p.name);
-    if(prev != null && g('qiprice-'+idx) && !g('qiprice-'+idx).value) g('qiprice-'+idx).value = prev;
+    if(prev != null && g('qiprice-'+idx)){
+      g('qiprice-'+idx).value = prev; // always set last-known rate
+    }
   }
   var ps = g('qprod-sugg-'+idx); if(ps) ps.style.display='none';
   syncQItems(); recalcQTotals();
@@ -5024,7 +5092,7 @@ function syncQItems(){
     if(g('qiqty-'+i)) it.qty = parseFloat(g('qiqty-'+i).value) || 0;
     if(g('qiprice-'+i)) it.rate = parseFloat(g('qiprice-'+i).value) || 0;
     it.amount = Math.round((it.qty * it.rate) * 100) / 100;
-    if(g('qiamt-'+i)) g('qiamt-'+i).value = (it.amount >= 0) ? fmtN(it.amount) : '';
+    if(g('qiamt-'+i)) g('qiamt-'+i).value = (it.amount >= 0) ? it.amount.toFixed(2) : '';
   });
 }
 function recalcQTotals(){
@@ -5034,10 +5102,21 @@ function recalcQTotals(){
   // Include old balance if enabled
   if(g('qi-ob-toggle') && g('qi-ob-toggle').checked) total += parseFloat((g('qi-ob-amt')||{}).value) || 0;
   if(g('qi-total')) g('qi-total').textContent = fmt(total);
+  // Amount paid row
+  var paidOn = g('qi-paid-toggle') && g('qi-paid-toggle').checked;
+  var paid = paidOn ? (parseFloat((g('qi-paid-amt')||{}).value)||0) : 0;
+  var balance = total - paid;
+  if(g('qi-paid-display'))  g('qi-paid-display').textContent  = fmt(paid);
+  if(g('qi-balance-display')) g('qi-balance-display').textContent = fmt(balance < 0 ? 0 : balance);
+  if(g('qi-paid-row'))    g('qi-paid-row').style.display    = paidOn ? '' : 'none';
+  if(g('qi-balance-row')) g('qi-balance-row').style.display  = paidOn ? '' : 'none';
+  // Words use balance due if paid, else total
+  var wordsAmt = paidOn ? (balance > 0 ? balance : 0) : total;
+  if(g('qi-words')) g('qi-words').textContent = total > 0 ? 'Rupees: '+n2w(Math.round(wordsAmt))+' Only' : '';
+  // Count bar
   if(g('qi-count')) g('qi-count').textContent = filled.length;
   var liveQty = _qitems.reduce(function(s,it){ return s+(parseFloat(it.qty)||0); }, 0);
   if(g('qi-total-qty')) g('qi-total-qty').textContent = liveQty;
-  if(g('qi-words')) g('qi-words').textContent = total > 0 ? 'Rupees: '+n2w(Math.round(total))+' Only' : '';
 }
 
 // Vehicle autocomplete — reuses the same vehicle list as the main invoice form
@@ -5082,6 +5161,12 @@ function saveQInv(){
     total += ob.amount;
   }
 
+  // Amount paid
+  var paidOn = g('qi-paid-toggle') && g('qi-paid-toggle').checked;
+  var paidAmt = paidOn ? (parseFloat((g('qi-paid-amt')||{}).value)||0) : 0;
+  var paidMode = paidOn ? (gv('qi-paid-mode')||'Cash') : '';
+  var paidData = paidAmt > 0 ? { amount: paidAmt, mode: paidMode } : null;
+
   var d = {
     invoiceNumber: no,
     invoiceDate: gv('qidt'),
@@ -5092,7 +5177,9 @@ function saveQInv(){
     vehicleNo: gv('qiveh'),
     paymentTerms: gv('qipt') || 'Immediate',
     oldBalance: ob,
-    items: JSON.parse(JSON.stringify(filled)),
+    amountPaid: paidData,
+    balanceDue: paidData ? parseFloat((total - paidAmt).toFixed(2)) : null,
+    items: JSON.parse(JSON.stringify(filled.map(function(it){return {name:it.name,qty:it.qty,rate:it.rate,amount:it.amount};}))),
     totalAmount: parseFloat(total.toFixed(2)),
     productCount: filled.length,
     totalQty: totalQty,
@@ -5135,6 +5222,14 @@ function saveQInv(){
         var pi = _par.findIndex(function(x){ return x.id === pid; });
         if(pi > -1) Object.assign(_par[pi], pUpd);
       }).catch(function(e){ console.error('party update:', e); });
+    }
+    // Save last-used paid amount for this party (for auto-fill next time)
+    if(paidData && paidData.amount > 0){
+      DB.ref(ep()+'partyLastPaid/'+pid).set({
+        amount: paidData.amount,
+        mode: paidData.mode || 'Cash',
+        lastUsed: Date.now()
+      }).catch(function(){});
     }
   }
 
@@ -5205,6 +5300,8 @@ function openQDetail(inv){
     +items.map(function(it){ return '<div class="drow"><span>'+(it.name||'Item')+'</span><span>'+it.qty+' × '+fmt(it.rate)+' = '+fmt(it.amount)+'</span></div>'; }).join('')
     +(inv.oldBalance && inv.oldBalance.amount ? '<div class="drow"><span>Old Balance'+(inv.oldBalance.date?' ('+fd(inv.oldBalance.date)+')':'')+'</span><span>'+fmt(inv.oldBalance.amount)+'</span></div>' : '')
     +'<div class="drow dtotal"><span>Total Amount</span><span>'+fmt(inv.totalAmount)+'</span></div>'
+    +(inv.amountPaid && inv.amountPaid.amount > 0 ? '<div class="drow" style="color:var(--ok)"><span>Amount Paid ('+( inv.amountPaid.mode||'Cash')+')</span><span style="font-weight:700;color:var(--ok)">'+fmt(inv.amountPaid.amount)+'</span></div>' : '')
+    +(inv.balanceDue > 0 ? '<div class="drow" style="color:var(--warn)"><span style="font-weight:700">Balance Due</span><span style="font-weight:700;color:var(--warn)">'+fmt(inv.balanceDue)+'</span></div>' : '')
     +'<div style="font-size:11px;color:var(--t2);margin-top:6px;font-style:italic">'+n2w(Math.round(inv.totalAmount||0))+' Only</div>'
     +'</div>';
   if(inv.notes) html += '<div class="dcard"><h4>Notes</h4><div style="font-size:12px;color:var(--t2)">'+inv.notes+'</div></div>';

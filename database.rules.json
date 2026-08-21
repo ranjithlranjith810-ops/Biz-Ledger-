@@ -17,34 +17,69 @@
         ".read": "auth != null && (auth.uid === $ownerUid || root.child('teamInvites').child(auth.uid + '_' + $ownerUid).exists())",
         ".write": "auth != null && (auth.uid === $ownerUid || root.child('teamInvites').child(auth.uid + '_' + $ownerUid).child('role').val() === 'editor')",
         "invoices": {
-          ".indexOn": ["_ts", "type", "status", "fy", "partyName"]
+          ".indexOn": [
+            "_ts",
+            "type",
+            "status",
+            "fy",
+            "partyName"
+          ]
         },
         "parties": {
-          ".indexOn": ["_ts", "type", "name"]
+          ".indexOn": [
+            "_ts",
+            "type",
+            "name"
+          ]
         },
         "products": {
-          ".indexOn": ["_ts", "name", "hsnCode"]
+          ".indexOn": [
+            "_ts",
+            "name",
+            "hsnCode"
+          ]
         },
         "vehicles": {
-          ".indexOn": ["_ts", "number", "status"]
+          ".indexOn": [
+            "_ts",
+            "number",
+            "status"
+          ]
         },
         "payments": {
-          ".indexOn": ["_ts", "direction", "partyName"]
+          ".indexOn": [
+            "_ts",
+            "direction",
+            "partyName"
+          ]
         },
         "employees": {
-          ".indexOn": ["_ts", "name"]
+          ".indexOn": [
+            "_ts",
+            "name"
+          ]
         },
         "expenses": {
-          ".indexOn": ["_ts", "category"]
+          ".indexOn": [
+            "_ts",
+            "category"
+          ]
         },
         "partyRates": {
           ".read": "auth != null && auth.uid === $ownerUid",
           ".write": "auth != null && auth.uid === $ownerUid"
+        },
+        "partyLastPaid": {
+          ".read": "auth != null && (auth.uid === $ownerUid || root.child('erp/'+auth.uid+'/companyRef').val() === $ownerUid)",
+          ".write": "auth != null && (auth.uid === $ownerUid || root.child('erp/'+auth.uid+'/companyRef').val() === $ownerUid)"
         }
       }
     },
     "teamInvites": {
-      ".indexOn": ["email", "companyId"],
+      ".indexOn": [
+        "email",
+        "companyId"
+      ],
       "$inviteId": {
         ".read": "auth != null",
         ".write": "auth != null && (data.child('companyId').val() === auth.uid || !data.exists())"
