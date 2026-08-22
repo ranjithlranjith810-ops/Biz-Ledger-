@@ -1062,7 +1062,7 @@ select option{background:#0C1B30;color:var(--t1);}
       <div class="fr">
         <div class="fg" style="flex:1;margin-right:8px"><label>Amount Paid ₹</label><input type="number" id="qi-paid-amt" placeholder="0.00" min="0" step="any" oninput="recalcQTotals()"/></div>
         <div class="fg" style="flex:1"><label>Payment Mode</label>
-          <select id="qi-paid-mode">
+          <select id="qi-paid-mode" onchange="recalcQTotals()">
             <option value="Cash">Cash</option>
             <option value="NEFT/RTGS">NEFT/RTGS</option>
             <option value="Cheque">Cheque</option>
@@ -1072,11 +1072,10 @@ select option{background:#0C1B30;color:var(--t1);}
         </div>
       </div>
     </div>
-
     <div class="total-box">
       <div class="trow grand"><span>Total Amount</span><span id="qi-total">₹0.00</span></div>
-      <div id="qi-paid-row" style="display:none" class="trow"><span style="color:var(--ok)">Amount Paid</span><span id="qi-paid-display" style="color:var(--ok)">₹0.00</span></div>
-      <div id="qi-balance-row" style="display:none" class="trow"><span style="color:var(--warn);font-weight:700">Balance Due</span><span id="qi-balance-display" style="color:var(--warn);font-weight:700">₹0.00</span></div>
+      <div class="trow" id="qi-paid-row" style="display:none"><span style="color:var(--ok)">Amount Paid</span><span id="qi-paid-display" style="color:var(--ok);font-weight:700">₹0.00</span></div>
+      <div class="trow" id="qi-balance-row" style="display:none"><span style="color:var(--warn);font-weight:700">Balance Due</span><span id="qi-balance-display" style="color:var(--warn);font-weight:700">₹0.00</span></div>
       <div class="trow words" id="qi-words"></div>
     </div>
 
@@ -1527,19 +1526,18 @@ function fmtN(n){return Number(n||0).toLocaleString('en-IN',{minimumFractionDigi
 function fd(s){
   if(!s||s==='—')return '—';
   try{
-    var str=String(s).split('T')[0];        // strip time part
+    // Split YYYY-MM-DD manually — never use new Date() for date strings
+    // (Android WebView on some Vivo/Oppo phones shifts UTC dates by timezone)
+    var str=String(s).split('T')[0];
     var pts=str.split('-');
-    if(pts.length===3&&pts[0].length===4){  // YYYY-MM-DD format
+    if(pts.length===3&&pts[0].length===4){
       var months=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
-      var d2=parseInt(pts[2],10);
-      var m2=parseInt(pts[1],10)-1;
-      var y2=pts[0];
-      var monLabel=months[m2]||pts[1];
-      return (d2<10?'0'+d2:d2)+'/'+monLabel+'/'+y2; // DD/Mon/YYYY
+      var d2=parseInt(pts[2],10), m2=parseInt(pts[1],10)-1, y2=pts[0];
+      return (d2<10?'0'+d2:String(d2))+'/'+(months[m2]||pts[1])+'/'+y2;
     }
-    // Timestamp number — parse as local date using manual method
+    // Timestamp number — use local date methods (these respect timezone correctly)
     var dt=new Date(typeof s==='number'?s:parseInt(s,10));
-    if(!isNaN(dt)){
+    if(!isNaN(dt.getTime())){
       var months2=['Jan','Feb','Mar','Apr','May','Jun','Jul','Aug','Sep','Oct','Nov','Dec'];
       return (dt.getDate()<10?'0':'')+dt.getDate()+'/'+months2[dt.getMonth()]+'/'+dt.getFullYear();
     }
@@ -2702,7 +2700,7 @@ function savePa(){
     }).catch(function(e){toast(e.message,'r');});
   }
 }
-function delPa(id){if(!confirm('Delete party?'))return;DB.ref(ep()+'parties/'+id).remove().then(function(){_par=_par.filter(function(x){return x.id!==id;});renderPa();renderD();toast('Deleted','g');});}
+function delPa(id){if(!confirm('Delete party?'))return;_par=_par.filter(function(x){return x.id!==id;});renderPa();DB.ref(ep()+'parties/'+id).remove().then(function(){renderD();toast('Deleted','g');}).catch(function(e){toast('Delete failed','r');});}
 
 // ═══════════════════════════ PRODUCT ═══════════════════════════
 function tgLow(){_lowOnly=!_lowOnly;g('lsbtn').style.background=_lowOnly?'rgba(255,255,255,.18)':'';renderPr();}
@@ -2743,7 +2741,7 @@ function savePr(){
     }).catch(function(e){toast(e.message,'r');});
   }
 }
-function delPr(id){if(!confirm('Delete product?'))return;DB.ref(ep()+'products/'+id).remove().then(function(){_pro=_pro.filter(function(x){return x.id!==id;});renderPr();renderD();toast('Deleted','g');});}
+function delPr(id){if(!confirm('Delete product?'))return;_pro=_pro.filter(function(x){return x.id!==id;});renderPr();DB.ref(ep()+'products/'+id).remove().then(function(){renderD();toast('Deleted','g');}).catch(function(e){toast('Delete failed','r');});}
 
 // ═══════════════════════════ EXPENSES ═══════════════════════════
 function openEx(){renderEx();opn('ovex');}
@@ -2756,7 +2754,7 @@ function saveEx(){
     renderEx();toast('Added!','g');
   }).catch(function(e){toast(e.message,'r');});
 }
-function delEx(id){DB.ref(ep()+'expenses/'+id).remove().then(function(){_exp=_exp.filter(function(x){return x.id!==id;});renderEx();toast('Deleted','g');});}
+function delEx(id){_exp=_exp.filter(function(x){return x.id!==id;});renderEx();DB.ref(ep()+'expenses/'+id).remove().then(function(){toast('Deleted','g');}).catch(function(e){toast('Delete failed','r');});}
 function renderEx(){
   var tot=_exp.reduce(function(s,e){return s+(e.amount||0);},0);
   g('extv').textContent=fmt(tot);
@@ -3257,10 +3255,10 @@ function openVehDetail(vid){
 function editCurrVeh(){ cls('ovvehd'); setTimeout(function(){ openVehF(_currVeh); }, 100); }
 function delCurrVeh(){
   if(!confirm('Delete vehicle '+(_currVeh?_currVeh.number:'')+'?')) return;
-  DB.ref(ep()+'vehicles/'+_currVeh.id).remove().then(function(){
-    _veh = _veh.filter(function(x){ return x.id!==_currVeh.id; });
-    cls('ovvehd'); renderVeh(); renderD(); toast('Deleted','g');
-  });
+  var delVehId=_currVeh.id;
+  _veh=_veh.filter(function(x){return x.id!==delVehId;});
+  cls('ovvehd'); renderVeh();
+  DB.ref(ep()+'vehicles/'+delVehId).remove().then(function(){renderD();toast('Deleted','g');}).catch(function(e){toast('Delete failed','r');});
 }
 function renderVeh(){
   var active = _veh.filter(function(v){ return v.status==='active'; }).length;
@@ -3355,9 +3353,8 @@ function savePayment(){
 }
 function delPay(id){
   if(!confirm('Delete payment?')) return;
-  DB.ref(ep()+'payments/'+id).remove().then(function(){
-    _pay=_pay.filter(function(x){ return x.id!==id; }); renderPay(); toast('Deleted','g');
-  });
+  _pay=_pay.filter(function(x){ return x.id!==id; }); renderPay();
+  DB.ref(ep()+'payments/'+id).remove().then(function(){toast('Deleted','g');}).catch(function(e){toast('Delete failed','r');});
 }
 function renderPay(){
   var q=(g('pay-srch')&&g('pay-srch').value||'').toLowerCase();
@@ -3431,9 +3428,8 @@ function saveEmp(){
 }
 function delEmp(id){
   if(!confirm('Delete employee?')) return;
-  DB.ref(ep()+'employees/'+id).remove().then(function(){
-    _emp=_emp.filter(function(x){ return x.id!==id; }); renderEmp(); toast('Deleted','g');
-  });
+  _emp=_emp.filter(function(x){ return x.id!==id; }); renderEmp();
+  DB.ref(ep()+'employees/'+id).remove().then(function(){toast('Deleted','g');}).catch(function(e){toast('Delete failed','r');});
 }
 function openSlip(emp){
   _currEmp = emp;
@@ -4826,13 +4822,15 @@ function convertToQuickInv(inv){
       // Load amount paid
       if(inv.amountPaid && inv.amountPaid.amount > 0){
         if(g('qi-paid-toggle')) g('qi-paid-toggle').checked = true;
-        if(g('qi-paid-amt'))  g('qi-paid-amt').value  = inv.amountPaid.amount;
+        if(g('qi-paid-amt'))    g('qi-paid-amt').value      = inv.amountPaid.amount;
         if(g('qi-paid-mode') && inv.amountPaid.mode) g('qi-paid-mode').value = inv.amountPaid.mode;
         toggleQPaid();
       } else {
         if(g('qi-paid-toggle')) g('qi-paid-toggle').checked = false;
-        if(g('qi-paid-amt'))  g('qi-paid-amt').value  = '';
-        toggleQPaid();
+        if(g('qi-paid-amt'))    g('qi-paid-amt').value      = '';
+        if(g('qi-paid-fields')) g('qi-paid-fields').style.display = 'none';
+        if(g('qi-paid-row'))    g('qi-paid-row').style.display    = 'none';
+        if(g('qi-balance-row')) g('qi-balance-row').style.display = 'none';
       }
 
       // Old balance — copy only if the source invoice has one
@@ -4889,6 +4887,15 @@ function openQInvF(inv){
     toggleQOldBal();
     if(g('qi-ob-amt')) g('qi-ob-amt').addEventListener('input', function(){ recalcQTotals(); });
   }
+  // Paid amount — populate from saved invoice or clear for new
+  if(g('qi-paid-toggle')){
+    var pd = (inv && inv.amountPaid) || null;
+    g('qi-paid-toggle').checked = !!(pd && pd.amount > 0);
+    if(g('qi-paid-amt'))  g('qi-paid-amt').value  = pd ? (pd.amount||'') : '';
+    if(g('qi-paid-mode') && pd && pd.mode) g('qi-paid-mode').value = pd.mode;
+    else if(g('qi-paid-mode')) g('qi-paid-mode').value = 'Cash';
+    toggleQPaid();
+  }
   buildQItemRows();
   opn('ovqinv');
   setupQVehAC();
@@ -4898,6 +4905,7 @@ function openQInvF(inv){
 function toggleQOldBal(){
   var on = g('qi-ob-toggle') && g('qi-ob-toggle').checked;
   if(g('qi-ob-fields')) g('qi-ob-fields').style.display = on ? 'block' : 'none';
+  // Wire old balance amount to live total update
   var obAmtEl = g('qi-ob-amt');
   if(obAmtEl && !obAmtEl._wired){
     obAmtEl.addEventListener('input', recalcQTotals);
@@ -4908,16 +4916,15 @@ function toggleQOldBal(){
 
 function toggleQPaid(){
   var on = g('qi-paid-toggle') && g('qi-paid-toggle').checked;
-  if(g('qi-paid-fields')) g('qi-paid-fields').style.display = on ? 'block' : 'none';
-  if(g('qi-paid-row'))    g('qi-paid-row').style.display    = on ? '' : 'none';
-  if(g('qi-balance-row')) g('qi-balance-row').style.display  = on ? '' : 'none';
-  // Auto-fill last-used paid amount + mode for this party
+  if(g('qi-paid-fields'))   g('qi-paid-fields').style.display   = on ? 'block' : 'none';
+  if(g('qi-paid-row'))      g('qi-paid-row').style.display      = on ? '' : 'none';
+  if(g('qi-balance-row'))   g('qi-balance-row').style.display   = on ? '' : 'none';
   if(on && _qPartyId && g('qi-paid-amt') && !g('qi-paid-amt').value){
     DB.ref(ep()+'partyLastPaid/'+_qPartyId).once('value').then(function(s){
       if(s.exists()){
-        var v = s.val();
-        if(v.amount && g('qi-paid-amt')) g('qi-paid-amt').value = v.amount;
-        if(v.mode && g('qi-paid-mode'))  g('qi-paid-mode').value = v.mode;
+        var v=s.val();
+        if(v.amount && g('qi-paid-amt')) g('qi-paid-amt').value=v.amount;
+        if(v.mode && g('qi-paid-mode'))  g('qi-paid-mode').value=v.mode;
         recalcQTotals();
       }
     }).catch(function(){});
@@ -5032,11 +5039,7 @@ function buildQItemRows(){
       nm.addEventListener('input', function(){
         if(!_qPartyId) return;
         var prev = getQPrevRate(_qPartyId, nm.value);
-        if(prev != null && !price.value){
-          price.value = prev;
-          // Recalc amount immediately after rate is auto-filled
-          syncQItems(); recalcQTotals();
-        }
+        if(prev != null && !price.value){ price.value = prev; syncQItems(); recalcQTotals(); }
       });
     }
     // Product-name autocomplete — pulls from existing Inventory products (name only, no price/HSN copied)
@@ -5065,9 +5068,7 @@ function fillQProdItem(idx, pid){
   // Rate memory — if this party has a saved rate for the product, prefill it
   if(_qPartyId){
     var prev = getQPrevRate(_qPartyId, p.name);
-    if(prev != null && g('qiprice-'+idx)){
-      g('qiprice-'+idx).value = prev; // always set last-known rate
-    }
+    if(prev != null && g('qiprice-'+idx)) g('qiprice-'+idx).value = prev;
   }
   var ps = g('qprod-sugg-'+idx); if(ps) ps.style.display='none';
   syncQItems(); recalcQTotals();
@@ -5099,19 +5100,18 @@ function recalcQTotals(){
   syncQItems();
   var total = _qitems.reduce(function(s, it){ return s + (it.amount||0); }, 0);
   var filled = _qitems.filter(function(it){ return it.name && it.name.trim(); });
-  // Include old balance if enabled
   if(g('qi-ob-toggle') && g('qi-ob-toggle').checked) total += parseFloat((g('qi-ob-amt')||{}).value) || 0;
   if(g('qi-total')) g('qi-total').textContent = fmt(total);
-  // Amount paid row
+  // Amount paid / balance due
   var paidOn = g('qi-paid-toggle') && g('qi-paid-toggle').checked;
   var paid = paidOn ? (parseFloat((g('qi-paid-amt')||{}).value)||0) : 0;
-  var balance = total - paid;
-  if(g('qi-paid-display'))  g('qi-paid-display').textContent  = fmt(paid);
-  if(g('qi-balance-display')) g('qi-balance-display').textContent = fmt(balance < 0 ? 0 : balance);
-  if(g('qi-paid-row'))    g('qi-paid-row').style.display    = paidOn ? '' : 'none';
-  if(g('qi-balance-row')) g('qi-balance-row').style.display  = paidOn ? '' : 'none';
-  // Words use balance due if paid, else total
-  var wordsAmt = paidOn ? (balance > 0 ? balance : 0) : total;
+  var balance = Math.max(0, total - paid);
+  if(g('qi-paid-display'))    g('qi-paid-display').textContent    = fmt(paid);
+  if(g('qi-balance-display')) g('qi-balance-display').textContent = fmt(balance);
+  if(g('qi-paid-row'))        g('qi-paid-row').style.display      = paidOn ? '' : 'none';
+  if(g('qi-balance-row'))     g('qi-balance-row').style.display   = paidOn ? '' : 'none';
+  // Words show balance due if partial payment, else total
+  var wordsAmt = (paidOn && paid > 0 && balance > 0) ? balance : total;
   if(g('qi-words')) g('qi-words').textContent = total > 0 ? 'Rupees: '+n2w(Math.round(wordsAmt))+' Only' : '';
   // Count bar
   if(g('qi-count')) g('qi-count').textContent = filled.length;
@@ -5165,7 +5165,8 @@ function saveQInv(){
   var paidOn = g('qi-paid-toggle') && g('qi-paid-toggle').checked;
   var paidAmt = paidOn ? (parseFloat((g('qi-paid-amt')||{}).value)||0) : 0;
   var paidMode = paidOn ? (gv('qi-paid-mode')||'Cash') : '';
-  var paidData = paidAmt > 0 ? { amount: paidAmt, mode: paidMode } : null;
+  var paidData = (paidOn && paidAmt > 0) ? {amount: paidAmt, mode: paidMode} : null;
+  var balanceDue = paidData ? parseFloat(Math.max(0, total - paidAmt).toFixed(2)) : null;
 
   var d = {
     invoiceNumber: no,
@@ -5178,8 +5179,8 @@ function saveQInv(){
     paymentTerms: gv('qipt') || 'Immediate',
     oldBalance: ob,
     amountPaid: paidData,
-    balanceDue: paidData ? parseFloat((total - paidAmt).toFixed(2)) : null,
-    items: JSON.parse(JSON.stringify(filled.map(function(it){return {name:it.name,qty:it.qty,rate:it.rate,amount:it.amount};}))),
+    balanceDue: balanceDue,
+    items: JSON.parse(JSON.stringify(filled.map(function(it){return {name:it.name,qty:it.qty,rate:it.rate,amount:it.amount};}))), // isolated snapshot
     totalAmount: parseFloat(total.toFixed(2)),
     productCount: filled.length,
     totalQty: totalQty,
@@ -5226,9 +5227,7 @@ function saveQInv(){
     // Save last-used paid amount for this party (for auto-fill next time)
     if(paidData && paidData.amount > 0){
       DB.ref(ep()+'partyLastPaid/'+pid).set({
-        amount: paidData.amount,
-        mode: paidData.mode || 'Cash',
-        lastUsed: Date.now()
+        amount: paidData.amount, mode: paidData.mode||'Cash', lastUsed: Date.now()
       }).catch(function(){});
     }
   }
@@ -5300,8 +5299,9 @@ function openQDetail(inv){
     +items.map(function(it){ return '<div class="drow"><span>'+(it.name||'Item')+'</span><span>'+it.qty+' × '+fmt(it.rate)+' = '+fmt(it.amount)+'</span></div>'; }).join('')
     +(inv.oldBalance && inv.oldBalance.amount ? '<div class="drow"><span>Old Balance'+(inv.oldBalance.date?' ('+fd(inv.oldBalance.date)+')':'')+'</span><span>'+fmt(inv.oldBalance.amount)+'</span></div>' : '')
     +'<div class="drow dtotal"><span>Total Amount</span><span>'+fmt(inv.totalAmount)+'</span></div>'
-    +(inv.amountPaid && inv.amountPaid.amount > 0 ? '<div class="drow" style="color:var(--ok)"><span>Amount Paid ('+( inv.amountPaid.mode||'Cash')+')</span><span style="font-weight:700;color:var(--ok)">'+fmt(inv.amountPaid.amount)+'</span></div>' : '')
-    +(inv.balanceDue > 0 ? '<div class="drow" style="color:var(--warn)"><span style="font-weight:700">Balance Due</span><span style="font-weight:700;color:var(--warn)">'+fmt(inv.balanceDue)+'</span></div>' : '')
+    +(inv.amountPaid&&inv.amountPaid.amount>0?'<div class="drow" style="color:var(--ok)"><span>Paid ('+( inv.amountPaid.mode||'Cash')+')</span><span style="font-weight:700;color:var(--ok)">'+fmt(inv.amountPaid.amount)+'</span></div>':'')
+    +(inv.balanceDue>0?'<div class="drow"><span style="font-weight:700;color:var(--warn)">Balance Due</span><span style="font-weight:700;color:var(--warn)">'+fmt(inv.balanceDue)+'</span></div>':'')
+    +(!inv.amountPaid&&inv.totalAmount>0?'':'')
     +'<div style="font-size:11px;color:var(--t2);margin-top:6px;font-style:italic">'+n2w(Math.round(inv.totalAmount||0))+' Only</div>'
     +'</div>';
   if(inv.notes) html += '<div class="dcard"><h4>Notes</h4><div style="font-size:12px;color:var(--t2)">'+inv.notes+'</div></div>';
@@ -5403,9 +5403,50 @@ function buildQPDF(inv){
     margin:{left:M, right:M}
   });
 
-  var Y = doc.lastAutoTable.finalY + 8;
-  doc.setFontSize(8); doc.setFont('helvetica','italic'); doc.setTextColor(30,30,30);
-  doc.text('Amount in Words: INR '+n2w(Math.round(inv.totalAmount||0))+' Only', M, Y);
+  var Y = doc.lastAutoTable.finalY + 6;
+
+  // Amount Paid / Balance Due rows
+  if(inv.amountPaid && inv.amountPaid.amount > 0){
+    var paidAmt  = inv.amountPaid.amount;
+    var paidMode = inv.amountPaid.mode || 'Cash';
+    var balDue   = inv.balanceDue != null ? inv.balanceDue : Math.max(0, (inv.totalAmount||0) - paidAmt);
+
+    doc.setFontSize(9); doc.setFont('helvetica','normal');
+
+    // Amount Paid row
+    doc.setTextColor(30,100,50);
+    doc.setFont('helvetica','bold');
+    doc.text('Amount Paid ('+paidMode+') :', M, Y);
+    doc.setFont('helvetica','normal');
+    doc.text('₹'+fmtN(paidAmt), 210-M, Y, {align:'right'});
+    Y += 6;
+
+    // Balance Due row
+    if(balDue > 0){
+      doc.setTextColor(160,80,0);
+      doc.setFont('helvetica','bold');
+      doc.text('Balance Due :', M, Y);
+      doc.setFont('helvetica','normal');
+      doc.text('₹'+fmtN(balDue), 210-M, Y, {align:'right'});
+      Y += 6;
+    } else {
+      doc.setTextColor(30,100,50);
+      doc.setFont('helvetica','bold');
+      doc.text('✓ Fully Paid', M, Y);
+      Y += 6;
+    }
+    doc.setTextColor(30,30,30);
+    doc.setFont('helvetica','normal');
+    Y += 2;
+
+    // Words show balance due if partial, else total
+    var wordsAmt = balDue > 0 ? balDue : (inv.totalAmount||0);
+    doc.setFontSize(8); doc.setFont('helvetica','italic');
+    doc.text('Amount in Words: INR '+n2w(Math.round(wordsAmt))+' Only', M, Y);
+  } else {
+    doc.setFontSize(8); doc.setFont('helvetica','italic'); doc.setTextColor(30,30,30);
+    doc.text('Amount in Words: INR '+n2w(Math.round(inv.totalAmount||0))+' Only', M, Y);
+  }
 
   return doc;
 }
